@@ -1439,7 +1439,7 @@ END:VCARD`
     break;
 }                   
 case 'alive': {
-    const voiceurl = `https://files.catbox.moe/wpciia.mp3`;
+    const voiceurl = ``;
     const useButton = userConfig.BUTTON === 'true';
     const ownerName = socket.user.name || 'Janith sathsara';
     
