@@ -1376,7 +1376,7 @@ case 'csong': {
     // 🔹 Load bot name dynamically
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     let cfg = await loadUserConfigFromMongo(sanitized) || {};
-    let botName = cfg.botName || 'Qᴜᴇᴇɴ ɪᴍᴀʟꜱʜᴀ ᴍD ᴠ2';
+    let botName = cfg.botName || 'JANI MD';
 
     // 🔹 Fake contact for quoting
     const shonux = {
