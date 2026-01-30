@@ -51,7 +51,7 @@ console.log('🚀 Auto Session Manager initialized with MongoDB Atlas');
 
 // Configs
 const footer = `*㋛ JANI MD BY Janith sathsara*`
-const logo = `https://files.catbox.moe/5usu9r.jpeg`;
+const logo = `https://i.ibb.co/7J0fvbvg/tourl-1769778191822.jpg`;
 const caption = `⏤ ͟͞ ❮❮ JANI-ℂ𝕆𝔻𝔼ℝ𝕊 ❯❯ ⏤JANI-ᴍᴅᵀᴹ ヤ`; 
 const botName = 'JANI-MD-V3'
 const mainSite = 'bots.srihub.store';
