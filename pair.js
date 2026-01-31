@@ -1439,7 +1439,7 @@ END:VCARD`
     break;
 }                   
 case 'alive': {
-    const voiceurl = ``;
+    const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
     const ownerName = socket.user.name || 'Janith sathsara';
     
