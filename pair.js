@@ -1879,7 +1879,7 @@ ${footer}`;
                 }, { quoted: fakeMetaQuote });
             }
 
-        } catch (e) {
+        } const(e) {
             console.error('Auto reply error:', e);
         }
     })
