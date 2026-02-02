@@ -1882,7 +1882,8 @@ ${footer}`;
         } catch (e) {
             console.error('Auto reply error:', e);
         }
-    });
+    })
+        break;
                  }               
 // Logo Maker Command - Button Selection
 case 'logo': {
