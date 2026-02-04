@@ -56,7 +56,7 @@ const caption = `⏤ ͟͞ ❮❮ JANI-ℂ𝕆𝔻𝔼ℝ𝕊 ❯❯ ⏤JANI-ᴍ�
 const botName = 'JANI-MD-V3'
 const mainSite = 'bots.srihub.store';
 const apibase = 'https://api.srihub.store'
-const apikey = `dew_6Ax67Z9TfVmIJsvYIdpgwRBvJMnEF9haF506L7po`;
+const apikey = `dew_LlwyTA9puvlzAX5yG97zY9CkqIBAHlEXGdbx7777`;
 const version = "v3"
 const ownerName = "Janith sathsara"
 const website = "bots.srihub.store"
@@ -1358,7 +1358,7 @@ case 'csong': {
     break;
 }
 case 'alive': {
-    const voiceurl = `https://files.catbox.moe/wpciia.mp3`;
+    const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
     const ownerName = socket.user.name || 'Janith sathsara';
     
@@ -1447,13 +1447,22 @@ case 'list':
 case 'pannel':
 case 'menu': {
     const useButton = userConfig.BUTTON === 'true';
-    // React to the menu command
+
+    // 1. මෙනු විධානයට React කිරීම
     await socket.sendMessage(m.chat, {
         react: {
             text: '📜',
             key: msg.key
         }
     });
+
+    // 2. හඬ පණිවිඩය (Voice Note) යැවීම
+    // මෙහි url එකට ඔබේ .mp3 හෝ .ogg link එකක් ලබා දෙන්න
+    await socket.sendMessage(m.chat, { 
+        audio: { url: 'https://files.catbox.moe/g0crh5.mp4' }, 
+        mimetype: 'audio/mp4', 
+        ptt: true 
+    }, { quoted: m });
 
     // Commands list grouped by category
     const commandsInfo = {
@@ -1466,8 +1475,6 @@ case 'menu': {
             { name: 'ig', description: 'Download Instagram video' },
             { name: 'ts', description: 'Search TikTok videos' },
             { name: 'yts', description: 'Search YouTube videos' },
-            { name: 'xvdl', description: 'Download Xvideos' },
-            { name: 'ph', description: 'Download Pornhub videos' },
         ],
         main: [
             { name: 'alive', description: 'Show bot status' },
@@ -1526,6 +1533,7 @@ case 'menu': {
 *╰──────────●●►*
 
 ${footer}`;
+
     const menuCaption2 = `🤩 *Hello ${pushname}*
 > WELCOME TO ${botName} 🪀
 
@@ -1563,7 +1571,6 @@ ${footer}`;
 
     // Normal image + caption menu
     } else {
-        // Build plain text list of commands grouped by category
         let fullMenu = `${menuCaption2}`;
         for (const [category, cmds] of Object.entries(commandsInfo)) {
             fullMenu += `\n> ${category.toUpperCase()} COMMANDS\n`;
@@ -1574,16 +1581,13 @@ ${footer}`;
 
         await socket.sendMessage(m.chat, { 
             image: { url: logo }, 
-            caption: fullMenu+`\n\n${footer}`, 
+            caption: fullMenu + `\n\n${footer}`, 
             contextInfo 
         }, { quoted: myquoted });
     }
 
     break;
-}
-
-
-
+        }
 // Logo Maker Command - Button Selection
 case 'logo': {
     const useButton = userConfig.BUTTON === 'true';
