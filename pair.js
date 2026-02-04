@@ -1357,60 +1357,6 @@ case 'csong': {
     }
     break;
 }
-case 'ts': {
-    const axios = require('axios');
-
-    const q = msg.message?.conversation ||
-              msg.message?.extendedTextMessage?.text || '';
-
-    let query = q.replace(/^[.\/!]ts\s*/i, '').trim();
-
-    if (!query) {
-        return await socket.sendMessage(sender, {
-            text: '*[❗] TikTok එකේ මොකද්ද බලන්න ඕනෙ කියපං! 🔍*'
-        }, { quoted: msg });
-    }
-
-    try {
-        const res = await axios.get(
-            'https://api.srihub.store/search/tiktok',
-            {
-                params: { q: query },
-                headers: {
-                    'apikey': process.env.SRIHUB_API_KEY,
-                    'x-api-key': process.env.SRIHUB_API_KEY,
-                    'Authorization': `Bearer ${process.env.SRIHUB_API_KEY}`,
-                    'User-Agent': 'Mozilla/5.0',
-                    'Accept': 'application/json'
-                },
-                timeout: 15000
-            }
-        );
-
-        const videos = res.data?.result || res.data?.data || [];
-
-        if (!videos.length) {
-            return await socket.sendMessage(sender, {
-                text: '⚠️ Result නැහැ 😢'
-            }, { quoted: msg });
-        }
-
-        const v = videos[0]; // first result only (safe)
-
-        await socket.sendMessage(sender, {
-            video: { url: v.play || v.video || v.url },
-            caption: `🎵 *TikTok*\n${v.title || 'No title'}`
-        }, { quoted: msg });
-
-    } catch (err) {
-        console.error('TS FAIL:', err.response?.status, err.response?.data);
-
-        await socket.sendMessage(sender, {
-            text: '❌ TS command fail උනා\n(API key / host IP issue)'
-        }, { quoted: msg });
-    }
-    break;
-                      }
 case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
