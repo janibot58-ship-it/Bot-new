@@ -1357,13 +1357,11 @@ case 'csong': {
     }
     break;
 }
- case 'ts': {
+   case 'ts': {
     const axios = require('axios');
 
     const q = msg.message?.conversation ||
-              msg.message?.extendedTextMessage?.text ||
-              msg.message?.imageMessage?.caption ||
-              msg.message?.videoMessage?.caption || '';
+              msg.message?.extendedTextMessage?.text || '';
 
     let query = q.replace(/^[.\/!]ts\s*/i, '').trim();
 
@@ -1373,71 +1371,55 @@ case 'csong': {
         }, { quoted: msg });
     }
 
-    // 🔹 Load bot name dynamically
-    const sanitized = (number || '').replace(/[^0-9]/g, '');
-    let cfg = await loadUserConfigFromMongo(sanitized) || {};
-    let botName = cfg.botName || 'JANI MD';
-
-    // 🔹 Fake contact for quoting
-    const shonux = {
-        key: {
-            remoteJid: "status@broadcast",
-            participant: "0@s.whatsapp.net",
-            fromMe: false,
-            id: "META_AI_FAKE_ID_TS"
-        },
-        message: {
-            contactMessage: {
-                displayName: botName,
-                vcard: `BEGIN:VCARD
-VERSION:3.0
-N:${botName};;;;
-FN:${botName}
-ORG:Meta Platforms
-TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
-END:VCARD`
-            }
-        }
-    };
-
     try {
-        await socket.sendMessage(sender, { text: `🔎 Searching TikTok for: ${query}...` }, { quoted: shonux });
+        await socket.sendMessage(sender, {
+            text: `🔎 TikTok Search: *${query}*`
+        }, { quoted: msg });
 
-        const searchParams = new URLSearchParams({ keywords: query, count: '10', cursor: '0', HD: '1' });
-        const response = await axios.post("https://tikwm.com/api/feed/search", searchParams, {
-            headers: { 'Content-Type': "application/x-www-form-urlencoded; charset=UTF-8", 'Cookie': "current_language=en", 'User-Agent': "Mozilla/5.0" }
+        const apiUrl = 'https://api.srihub.store/search/tiktok';
+
+        const res = await axios.get(apiUrl, {
+            params: { q: query },
+            headers: {
+                'x-api-key': process.env.SRIHUB_API_KEY, // ✅ API KEY
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json'
+            }
         });
 
-        const videos = response.data?.data?.videos;
-        if (!videos || videos.length === 0) {
-            return await socket.sendMessage(sender, { text: '⚠️ No videos found.' }, { quoted: shonux });
+        // 🔹 Response structure check
+        const videos = res.data?.result || res.data?.data || [];
+        if (!videos.length) {
+            return await socket.sendMessage(sender, {
+                text: '⚠️ Video හම්බුනේ නෑ 😢'
+            }, { quoted: msg });
         }
 
-        // Limit number of videos to send
-        const limit = 3; 
+        const limit = 3;
         const results = videos.slice(0, limit);
 
-        // 🔹 Send videos one by one
-        for (let i = 0; i < results.length; i++) {
-            const v = results[i];
-            const videoUrl = v.play || v.download || null;
+        for (const v of results) {
+            const videoUrl = v.play || v.video || v.url;
             if (!videoUrl) continue;
-
-            await socket.sendMessage(sender, { text: `*⏳ Downloading:* ${v.title || 'No Title'}` }, { quoted: shonux });
 
             await socket.sendMessage(sender, {
                 video: { url: videoUrl },
-                caption: `*🎵 ${botName} 𝐓𝙸𝙺𝚃𝙾𝙺 𝐃𝙾𝚆𝙽𝙻𝙾𝙰𝙳𝙴𝚁*\n𝐓itle: ${v.title || 'No Title'}\n*🥷𝐀𝚄𝚃𝙷𝙾𝚁:* ${v.author?.nickname || 'Unknown'}`
-            }, { quoted: shonux });
+                caption:
+`*🎵 TikTok Video*
+*📌 Title:* ${v.title || 'No title'}
+*👤 Author:* ${v.author || v.nickname || 'Unknown'}`
+            }, { quoted: msg });
         }
 
     } catch (err) {
-        console.error('TikTok Search Error:', err);
-        await socket.sendMessage(sender, { text: `❌ Error: ${err.message}` }, { quoted: shonux });
-    }
+        console.error('Srihub API Error:', err.response?.data || err.message);
 
+        await socket.sendMessage(sender, {
+            text: '❌ API Error 😕 (key එක check කරපං)'
+        }, { quoted: msg });
+    }
     break;
-}                   
+                 }     
 case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
