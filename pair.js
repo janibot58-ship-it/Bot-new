@@ -1443,85 +1443,74 @@ ${footer}`;
     break;
         }                       
 // Menu Command - shows all commands in a button menu or text format - Last Update 2025-August-14
-case 'list':
+ case 'list':
 case 'pannel':
 case 'menu': {
-    const useButton = userConfig.BUTTON === 'true';
+    try {
+        const useButton = userConfig.BUTTON === 'true';
 
-    // 1. මෙනු විධානයට React කිරීම
-    await socket.sendMessage(m.chat, {
-        react: {
-            text: '📜',
-            key: msg.key
-        }
-    });
+        // 1. මෙනු විධානයට React කිරීම
+        await socket.sendMessage(m.chat, {
+            react: { text: '📜', key: m.key }
+        });
 
-    // 2. හඬ පණිවිඩය (Voice Note) යැවීම
-    // මෙහි url එකට ඔබේ .mp3 හෝ .ogg link එකක් ලබා දෙන්න
-    await socket.sendMessage(m.chat, { 
-        audio: { url: 'https://files.catbox.moe/g0crh5.mp4' }, 
-        mimetype: 'audio/mp4', 
-        ptt: true 
-    }, { quoted: m });
+        // 2. හඬ පණිවිඩය (Voice Note) යැවීම
+        // මෙහි url එකට ඔබේ .mp3 හෝ .ogg link එකක් ලබා දෙන්න
+        await socket.sendMessage(m.chat, { 
+            audio: { url: 'https://files.catbox.moe/g0crh5.mp4' }, 
+            mimetype: 'audio/mp4', 
+            ptt: true 
+        }, { quoted: m });
 
-    // Commands list grouped by category
-    const commandsInfo = {
-        download: [
-            { name: 'song', description: 'Download Songs' },
-            { name: 'video', description: 'Download Videos'},
-            { name: 'tiktok', description: 'Download TikTok video' },
-            { name: 'img', description: 'Download Images' },
-            { name: 'fb', description: 'Download Facebook video' },
-            { name: 'ig', description: 'Download Instagram video' },
-            { name: 'ts', description: 'Search TikTok videos' },
-            { name: 'yts', description: 'Search YouTube videos' },
-        ],
-        main: [
-            { name: 'alive', description: 'Show bot status' },
-            { name: 'menu', description: 'Show all commands' },
-            { name: 'ping', description: 'Get bot speed' },
-            { name: 'freebot', description: 'Setup Free Bot' },
-            { name: 'owner', description: 'Contact Bot Owner' },
-            { name: 'getdp', description: 'Get Profile Picture' },
-            { name: 'logo', description: 'Create Logo' },
-            { name: 'fancy', description: 'View Fancy Text' },
-            { name: 'winfo', description: 'Get User Profile Picture' },
-            { name: 'cid', description: 'Get Channel ID' },
-        ],
-        owner: [
-            { name: 'deleteme', description: 'Delete your session' },
-            { name: 'fc', description: 'Follow newsletter channel' },
-            { name: 'set', description: 'Set Setting Using Env' },
-            { name: 'setting', description: 'Setup YouOwn Setting' },
-            { name: 'jid', description: 'Get JID of a number' },
-        ],
-        group: [
-            { name: 'bomb', description: 'Send Bomb Message' },
-        ],
-         ai: [
-            { name: 'aiimg', description: 'Generate AI Image' },
-        ],
-    };
+        // Commands list grouped by category
+        const commandsInfo = {
+            download: [
+                { name: 'song', description: 'Download Songs' },
+                { name: 'video', description: 'Download Videos'},
+                { name: 'tiktok', description: 'Download TikTok video' },
+                { name: 'img', description: 'Download Images' },
+                { name: 'fb', description: 'Download Facebook video' },
+                { name: 'ig', description: 'Download Instagram video' },
+                { name: 'ts', description: 'Search TikTok videos' },
+                { name: 'yts', description: 'Search YouTube videos' },
+            ],
+            main: [
+                { name: 'alive', description: 'Show bot status' },
+                { name: 'menu', description: 'Show all commands' },
+                { name: 'ping', description: 'Get bot speed' },
+                { name: 'freebot', description: 'Setup Free Bot' },
+                { name: 'owner', description: 'Contact Bot Owner' },
+                { name: 'getdp', description: 'Get Profile Picture' },
+                { name: 'logo', description: 'Create Logo' },
+                { name: 'fancy', description: 'View Fancy Text' },
+                { name: 'winfo', description: 'Get User Profile Picture' },
+                { name: 'cid', description: 'Get Channel ID' },
+            ],
+            owner: [
+                { name: 'deleteme', description: 'Delete your session' },
+                { name: 'fc', description: 'Follow newsletter channel' },
+                { name: 'set', description: 'Set Setting Using Env' },
+                { name: 'setting', description: 'Setup YouOwn Setting' },
+                { name: 'jid', description: 'Get JID of a number' },
+            ],
+            group: [
+                { name: 'bomb', description: 'Send Bomb Message' },
+            ],
+            ai: [
+                { name: 'aiimg', description: 'Generate AI Image' },
+            ],
+        };
 
-    // Build sections for button menu
-    const sections = Object.entries(commandsInfo).map(([category, cmds]) => ({
-        title: category.toUpperCase() + ' CMD',
-        rows: cmds.map(cmd => ({
-            title: cmd.name,
-            description: cmd.description,
-            id: prefix + cmd.name,
-        })),
-    }));
+        // 🕒 Uptime ගණනය කිරීම
+        const startTime = socketCreationTime.get(number) || Date.now();
+        const uptime = Math.floor((Date.now() - startTime) / 1000);
+        const hours = Math.floor(uptime / 3600);
+        const minutes = Math.floor((uptime % 3600) / 60);
+        const seconds = Math.floor(uptime % 60);
+        const ownerName = socket.user.name || 'Janith Sathsara';
 
-    const ownerName = socket.user.name || 'Janith sathsara';
-    const startTime = socketCreationTime.get(number) || Date.now();
-    const uptime = Math.floor((Date.now() - startTime) / 1000);
-    const hours = Math.floor(uptime / 3600);
-    const minutes = Math.floor((uptime % 3600) / 60);
-    const seconds = Math.floor(uptime % 60);
-
-    // Menu captions
-    const menuCaption = `🤩 *Hello ${pushname}*
+        // 📝 මෙනු එකේ ප්‍රධාන ශීර්ෂය
+        const menuCaption = `🤩 *Hello ${pushname}*
 > WELCOME TO ${botName} 🪀
 
 *╭─「 ꜱᴛᴀᴛᴜꜱ ᴅᴇᴛᴀɪʟꜱ 」*
@@ -1533,7 +1522,6 @@ case 'menu': {
 *╰──────────●●►*
 
 ${footer}`;
-
     const menuCaption2 = `🤩 *Hello ${pushname}*
 > WELCOME TO ${botName} 🪀
 
@@ -1545,49 +1533,61 @@ ${footer}`;
 *│*📟 \`Uptime\` : ${hours}h ${minutes}m ${seconds}s
 *╰──────────●●►*`;
 
-    // Button menu
-    if (useButton) {
-        await socket.sendMessage(from, {
-            image: { url: logo },
-            caption: menuCaption,
-            buttons: [
-                {
-                    buttonId: 'action',
-                    buttonText: { displayText: '📂 Menu Options' },
-                    type: 4,
-                    nativeFlowInfo: {
-                        name: 'single_select',
-                        paramsJson: JSON.stringify({
-                            title: 'Commands Menu ❏',
-                            sections: sections,
-                        }),
+        // 🔘 Button මෙනු එක
+        if (useButton) {
+            const sections = Object.entries(commandsInfo).map(([category, cmds]) => ({
+                title: category.toUpperCase() + ' CMD',
+                rows: cmds.map(cmd => ({
+                    title: cmd.name,
+                    description: cmd.description,
+                    id: prefix + cmd.name,
+                })),
+            }));
+
+            await socket.sendMessage(m.chat, {
+                image: { url: logo },
+                caption: menuCaption,
+                buttons: [
+                    {
+                        buttonId: 'action',
+                        buttonText: { displayText: '📂 Menu Options' },
+                        type: 4,
+                        nativeFlowInfo: {
+                            name: 'single_select',
+                            paramsJson: JSON.stringify({
+                                title: 'Commands Menu ❏',
+                                sections: sections,
+                            }),
+                        },
                     },
-                },
-            ],
-            headerType: 1,
-            viewOnce: true,
-            contextInfo: contextInfo2
-        }, { quoted: myquoted });
+                ],
+                headerType: 1,
+                viewOnce: true,
+                contextInfo: contextInfo2
+            }, { quoted: m });
 
-    // Normal image + caption menu
-    } else {
-        let fullMenu = `${menuCaption2}`;
-        for (const [category, cmds] of Object.entries(commandsInfo)) {
-            fullMenu += `\n> ${category.toUpperCase()} COMMANDS\n`;
-            fullMenu += `*╭──────────●●►*\n`;
-            fullMenu += cmds.map(c => `*│*❯❯◦ ${c.name}`).join('\n');
-            fullMenu += `\n*╰───────────●●►*`;
+        // 📄 සාමාන්‍ය (Normal) මෙනු එක
+        } else {
+            let fullMenu = menuCaption + `\n`;
+            for (const [category, cmds] of Object.entries(commandsInfo)) {
+                fullMenu += `\n> ${category.toUpperCase()} COMMANDS\n`;
+                fullMenu += `*╭──────────●●►*\n`;
+                fullMenu += cmds.map(c => `*│*❯❯◦ ${c.name}`).join('\n');
+                fullMenu += `\n*╰───────────●●►*`;
+            }
+
+            await socket.sendMessage(m.chat, { 
+                image: { url: logo }, 
+                caption: fullMenu + `\n\n${footer}`, 
+                contextInfo 
+            }, { quoted: m });
         }
 
-        await socket.sendMessage(m.chat, { 
-            image: { url: logo }, 
-            caption: fullMenu + `\n\n${footer}`, 
-            contextInfo 
-        }, { quoted: myquoted });
+    } catch (e) {
+        console.error("Menu Error:", e);
     }
-
     break;
-        }
+                 }
 // Logo Maker Command - Button Selection
 case 'logo': {
     const useButton = userConfig.BUTTON === 'true';
