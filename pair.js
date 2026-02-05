@@ -1357,6 +1357,129 @@ case 'csong': {
     }
     break;
 }
+   case 'unblock': {
+  try {
+    // caller number (who sent the command)
+    const callerNumberClean = (senderNumber || '').replace(/[^0-9]/g, '');
+    const ownerNumberClean = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+    const sessionOwner = (number || '').replace(/[^0-9]/g, '');
+
+    // allow if caller is global owner OR this session's owner
+    if (callerNumberClean !== ownerNumberClean && callerNumberClean !== sessionOwner) {
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❌ ඔබට මෙය භාවිත කිරීමට අවසර නැත. (Owner හෝ මෙහි session owner විය යුතුයි)' }, { quoted: msg });
+      break;
+    }
+
+    // determine target JID: reply / mention / arg
+    let targetJid = null;
+    const ctx = msg.message?.extendedTextMessage?.contextInfo;
+
+    if (ctx?.participant) targetJid = ctx.participant;
+    else if (ctx?.mentionedJid && ctx.mentionedJid.length) targetJid = ctx.mentionedJid[0];
+    else if (args && args.length > 0) {
+      const possible = args[0].trim();
+      if (possible.includes('@')) targetJid = possible;
+      else {
+        const digits = possible.replace(/[^0-9]/g,'');
+        if (digits) targetJid = `${digits}@s.whatsapp.net`;
+      }
+    }
+
+    if (!targetJid) {
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❗ කරුණාකර reply කරන හෝ mention කරන හෝ number එක යොදන්න. උදාහරණය: .unblock 9477xxxxxxx' }, { quoted: msg });
+      break;
+    }
+
+    // normalize
+    if (!targetJid.includes('@')) targetJid = `${targetJid}@s.whatsapp.net`;
+    if (!targetJid.endsWith('@s.whatsapp.net') && !targetJid.includes('@')) targetJid = `${targetJid}@s.whatsapp.net`;
+
+    // perform unblock
+    try {
+      if (typeof socket.updateBlockStatus === 'function') {
+        await socket.updateBlockStatus(targetJid, 'unblock');
+      } else {
+        await socket.updateBlockStatus(targetJid, 'unblock');
+      }
+      try { await socket.sendMessage(sender, { react: { text: "✅", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: `🔓 @${targetJid.split('@')[0]} unblocked successfully.`, mentions: [targetJid] }, { quoted: msg });
+    } catch (err) {
+      console.error('Unblock error:', err);
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❌ Failed to unblock the user.' }, { quoted: msg });
+    }
+
+  } catch (err) {
+    console.error('unblock command general error:', err);
+    try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+    await socket.sendMessage(sender, { text: '❌ Error occurred while processing unblock command.' }, { quoted: msg });
+  }
+  break;
+}    
+  case 'block': {
+  try {
+    // caller number (who sent the command)
+    const callerNumberClean = (senderNumber || '').replace(/[^0-9]/g, '');
+    const ownerNumberClean = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+    const sessionOwner = (number || '').replace(/[^0-9]/g, '');
+
+    // allow if caller is global owner OR this session's owner
+    if (callerNumberClean !== ownerNumberClean && callerNumberClean !== sessionOwner) {
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❌ ඔබට මෙය භාවිත කිරීමට අවසර නැත. (Owner හෝ මෙහි session owner විය යුතුයි)' }, { quoted: msg });
+      break;
+    }
+
+    // determine target JID: reply / mention / arg
+    let targetJid = null;
+    const ctx = msg.message?.extendedTextMessage?.contextInfo;
+
+    if (ctx?.participant) targetJid = ctx.participant; // replied user
+    else if (ctx?.mentionedJid && ctx.mentionedJid.length) targetJid = ctx.mentionedJid[0]; // mentioned
+    else if (args && args.length > 0) {
+      const possible = args[0].trim();
+      if (possible.includes('@')) targetJid = possible;
+      else {
+        const digits = possible.replace(/[^0-9]/g,'');
+        if (digits) targetJid = `${digits}@s.whatsapp.net`;
+      }
+    }
+
+    if (!targetJid) {
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❗ කරුණාකර reply කරන හෝ mention කරන හෝ number එක යොදන්න. උදාහරණය: .block 9477xxxxxxx' }, { quoted: msg });
+      break;
+    }
+
+    // normalize
+    if (!targetJid.includes('@')) targetJid = `${targetJid}@s.whatsapp.net`;
+    if (!targetJid.endsWith('@s.whatsapp.net') && !targetJid.includes('@')) targetJid = `${targetJid}@s.whatsapp.net`;
+
+    // perform block
+    try {
+      if (typeof socket.updateBlockStatus === 'function') {
+        await socket.updateBlockStatus(targetJid, 'block');
+      } else {
+        // some bailey builds use same method name; try anyway
+        await socket.updateBlockStatus(targetJid, 'block');
+      }
+      try { await socket.sendMessage(sender, { react: { text: "✅", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: `✅ @${targetJid.split('@')[0]} blocked successfully.`, mentions: [targetJid] }, { quoted: msg });
+    } catch (err) {
+      console.error('Block error:', err);
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❌ Failed to block the user. (Maybe invalid JID or API failure)' }, { quoted: msg });
+    }
+
+  } catch (err) {
+    console.error('block command general error:', err);
+    try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+    await socket.sendMessage(sender, { text: '❌ Error occurred while processing block command.' }, { quoted: msg });
+  }
+  break;
+        }                  
 case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
