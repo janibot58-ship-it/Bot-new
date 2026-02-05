@@ -1480,6 +1480,7 @@ case 'csong': {
   }
   break;
         }     
+
     case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
