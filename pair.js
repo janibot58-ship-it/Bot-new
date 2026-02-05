@@ -2574,7 +2574,7 @@ case 'setting': {
         `┃◉ *Prefix:* ${currentConfig.PREFIX}\n` +
         `┗━━━━━━━━━━◆◉◉➤`;
 
-    if (useButton) {
+if (useButton) {
         const settingOptions = {
             name: 'single_select',
             paramsJson: JSON.stringify({
@@ -2618,10 +2618,10 @@ case 'setting': {
                     {
                         title: '➤ 𝐖𝙾𝚁𝙺 𝐓𝚈𝙿𝙴',
                         rows: [
-                            { title: 'PUBLIC ON', description: '', id: `${Prefix}public on`},
-                            { title: 'PRIVATE ON', description: '',id: `${prefix}privete on`},
-                            { title: 'GROUPS ON', description: '',id:  `${prefix}groups on`},
-                            { title: 'INBOX ON', descrition: '',id: `${prefix}inbox on`},
+                            { title: 'PUBLIC ON', description: '', id: `${prefix}public on`}, // මෙතන Prefix නෙවෙයි prefix විය යුතුයි
+                            { title: 'PRIVATE ON', description: '', id: `${prefix}private on`}, // privete spelling නිවැරදි කළා
+                            { title: 'GROUPS ON', description: '', id: `${prefix}groups on`},
+                            { title: 'INBOX ON', description: '', id: `${prefix}inbox on`}, // descrition spelling නිවැරදි කළා
                          ],
                     },
                     {
@@ -2639,6 +2639,7 @@ case 'setting': {
             viewOnce: true,
             image: { url: logo },
             caption: settingsCaption,
+            footer: 'Select an option below', // Button messages වලට footer එකක් තිබීම හොඳයි
             buttons: [
                 {
                     buttonId: 'settings_action',
