@@ -2659,6 +2659,7 @@ ${settingsCaption}
 4 │❯❯◦ Show Buttons
 5 │❯❯◦ Auto Message React
 6 │❯❯◦ Status Emojis
+7 │❯❯◦ WORK TYPE
 `;
 
         const sentMsg = await socket.sendMessage(sender, {
