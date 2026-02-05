@@ -1479,7 +1479,104 @@ case 'csong': {
     await socket.sendMessage(sender, { text: '❌ Error occurred while processing block command.' }, { quoted: msg });
   }
   break;
-        }     
+        }    
+      case 'tourl':
+case 'url':
+case 'upload': {
+    const axios = require('axios');
+    const FormData = require('form-data');
+    const fs = require('fs');
+    const os = require('os');
+    const path = require('path');
+
+    const quoted = msg.message?.extendedTextMessage?.contextInfo;
+    const mime = quoted?.quotedMessage?.imageMessage?.mimetype || 
+                 quoted?.quotedMessage?.videoMessage?.mimetype || 
+                 quoted?.quotedMessage?.audioMessage?.mimetype || 
+                 quoted?.quotedMessage?.documentMessage?.mimetype;
+
+    if (!quoted || !mime) {
+        return await socket.sendMessage(sender, { text: '❌ *Please reply to an image or video.*' });
+    }
+
+    // Fake Quote for Style
+    const metaQuote = {
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_MEDIA" },
+        message: { contactMessage: { displayName: "BESTIE MEDIA UPLOADER", vcard: `BEGIN:VCARD\nVERSION:3.0\nFN:Catbox\nORG:Upload Service\nEND:VCARD` } }
+    };
+
+    let mediaType;
+    let msgKey;
+    
+    if (quoted.quotedMessage.imageMessage) {
+        mediaType = 'image';
+        msgKey = quoted.quotedMessage.imageMessage;
+    } else if (quoted.quotedMessage.videoMessage) {
+        mediaType = 'video';
+        msgKey = quoted.quotedMessage.videoMessage;
+    } else if (quoted.quotedMessage.audioMessage) {
+        mediaType = 'audio';
+        msgKey = quoted.quotedMessage.audioMessage;
+    } else if (quoted.quotedMessage.documentMessage) {
+        mediaType = 'document';
+        msgKey = quoted.quotedMessage.documentMessage;
+    }
+
+    try {
+        // Using existing downloadContentFromMessage
+        const stream = await downloadContentFromMessage(msgKey, mediaType);
+        let buffer = Buffer.alloc(0);
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+
+        const ext = mime.split('/')[1] || 'tmp';
+        const tempFilePath = path.join(os.tmpdir(), `upload_${Date.now()}.${ext}`);
+        fs.writeFileSync(tempFilePath, buffer);
+
+        const form = new FormData();
+        form.append('fileToUpload', fs.createReadStream(tempFilePath));
+        form.append('reqtype', 'fileupload');
+
+        const response = await axios.post('https://catbox.moe/user/api.php', form, { 
+            headers: form.getHeaders() 
+        });
+
+        fs.unlinkSync(tempFilePath); // Cleanup
+
+        const mediaUrl = response.data.trim();
+        const fileSize = (buffer.length / 1024 / 1024).toFixed(2) + ' MB';
+        const typeStr = mediaType.charAt(0).toUpperCase() + mediaType.slice(1);
+
+        const txt = `
+🔗 *MEDIA UPLOADER*
+
+📂 *Type:* ${typeStr}
+📊 *Size:* ${fileSize}
+
+🚀 *Url:* ${mediaUrl}
+
+_© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
+
+        await socket.sendMessage(sender, { 
+            text: txt,
+            contextInfo: {
+                externalAdReply: {
+                    title: "Media Uploaded Successfully!",
+                    body: "Click to view media",
+                    thumbnailUrl: mediaUrl.match(/\.(jpeg|jpg|gif|png)$/) ? mediaUrl : "https://files.catbox.moe/xveuc2.jpg",
+                    sourceUrl: mediaUrl,
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: metaQuote });
+
+    } catch (e) {
+        console.error(e);
+        await socket.sendMessage(sender, { text: '❌ *Error uploading media.*' });
+    }
+                 }              
 
     case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
