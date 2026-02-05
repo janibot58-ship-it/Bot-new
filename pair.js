@@ -1157,7 +1157,7 @@ function setupCommandHandlers(socket, number) {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
                 newsletterJid: '120363421416353845@newsletter',
-                newsletterName: '⏤ ͟͞ ❮❮ JANI-ℂ𝕆𝔻𝔼ℝ𝕊 ❯❯ ⏤JANI-ᴍᴅᵀᴹ ヤ',
+                newsletterName: 'JANI-MD>>>>>>',
                 serverMessageId: 143
             }
         }; 
