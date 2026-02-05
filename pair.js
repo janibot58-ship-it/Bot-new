@@ -1581,7 +1581,7 @@ END:VCARD`
         await socket.sendMessage(sender, { text: '*⏳ Fetching APK info...*' }, { quoted: shonux });
 
         // 🔹 Call API
-        const apiUrl = `https://tharuzz-ofc-apis.vercel.app/api/download/apkdownload?id=${encodeURIComponent(id)}`;
+        const apiUrl = `https://api.srihub.store/download/mediafire?id=${encodeURIComponent(id)}`;
         const { data } = await axios.get(apiUrl);
 
         if (!data.success || !data.result) {
