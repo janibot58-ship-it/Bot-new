@@ -3107,11 +3107,6 @@ if (!isOwner) {
   // If work type is "public", allow all (no restrictions needed)
 }
 // ========== END WORK TYPE RESTRICTIONS ==========
-
-
-      switch (command) {
-        // --- existing commands (deletemenumber, unfollow, newslist, admin commands etc.) ---
-        // ... (keep existing other case handlers unchanged
 // TikTok Downloader Command - Download TikTok Videos - Last Update 2025-August-14
 case 'tt':
 case 'ttdl':         
