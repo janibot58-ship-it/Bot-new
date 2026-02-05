@@ -3017,9 +3017,6 @@ case 'save': {
     }
     break;
 }
-  break;
-}
-
 case 'wtype': {
   await socket.sendMessage(sender, { react: { text: '🛠️', key: msg.key } });
   try {
