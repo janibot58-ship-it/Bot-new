@@ -3080,6 +3080,38 @@ case 'wtype': {
   }
   break;
             }
+                    // ========== ADD WORK TYPE RESTRICTIONS HERE ==========
+// Apply work type restrictions for non-owner users
+if (!isOwner) {
+  // Get work type from user config or fallback to global config
+  const workType = userConfig.WORK_TYPE || 'public'; // Default to public if not set
+  
+  // If work type is "private", only owner can use commands
+  if (workType === "private") {
+    console.log(`Command blocked: WORK_TYPE is private for ${sanitized}`);
+    return;
+  }
+  
+  // If work type is "inbox", block commands in groups
+  if (isGroup && workType === "inbox") {
+    console.log(`Command blocked: WORK_TYPE is inbox but message is from group for ${sanitized}`);
+    return;
+  }
+  
+  // If work type is "groups", block commands in private chats
+  if (!isGroup && workType === "groups") {
+    console.log(`Command blocked: WORK_TYPE is groups but message is from private chat for ${sanitized}`);
+    return;
+  }
+  
+  // If work type is "public", allow all (no restrictions needed)
+}
+// ========== END WORK TYPE RESTRICTIONS ==========
+
+
+      switch (command) {
+        // --- existing commands (deletemenumber, unfollow, newslist, admin commands etc.) ---
+        // ... (keep existing other case handlers unchanged
 // TikTok Downloader Command - Download TikTok Videos - Last Update 2025-August-14
 case 'tt':
 case 'ttdl':         
