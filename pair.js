@@ -2614,6 +2614,16 @@ case 'setting': {
                         ],
                     },
                     {
+                        *➤ 𝐖𝙾𝚁𝙺 𝐓𝚈𝙿𝙴* (Current: ${currentConfig.WORK_TYPE || 'public'})
+╭──▣
+│ ➜ ${prefix}wtype public
+│ ➜ ${prefix}wtype private
+│ ➜ ${prefix}wtype groups
+│ ➜ ${prefix}wtype inbox
+╰──▣
+        ],
+            },
+      {
                         title: '➤ STATUS EMOJIS',
                         rows: [
                             { title: 'SET STATUS EMOJIS', description: '', id: `${prefix}setemojis` },
