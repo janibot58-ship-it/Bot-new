@@ -2540,6 +2540,7 @@ case 'setting': {
         const settingsText = `
 *╭─「 CURRENT SETTINGS 」─●●➤*  
 *│ 👁️  AUTO STATUS SEEN:* ${currentConfig.AUTO_VIEW_STATUS}
+*| 🔒  WORK TYPE:* ${currentConfig.WORK_TYPE}
 *│ ❤️  AUTO STATUS REACT:* ${currentConfig.AUTO_LIKE_STATUS}
 *│ 🎥  AUTO RECORDING:* ${currentConfig.AUTO_RECORDING}
 *│ 🔘  SHOW BUTTONS:* ${currentConfig.BUTTONS === 'false' ? 'false' : 'true'}
@@ -2566,6 +2567,7 @@ case 'setting': {
         `┏━━━━━━━━━━◆◉◉➤\n` +
         `┃◉ *Auto Status Seen:* ${currentConfig.AUTO_VIEW_STATUS}\n` +
         `┃◉ *Auto Status React:* ${currentConfig.AUTO_LIKE_STATUS}\n` +
+        `┃◉ *WORK TYPE:* ${currentConfig.WORK_TYPE}\n`+
         `┃◉ *Auto Recording:* ${currentConfig.AUTO_RECORDING}\n` +
         `┃◉ *Auto Msg React:* ${currentConfig.AUTO_REACT_MESSAGES}\n` +
         `┃◉ *Show Buttons:* ${currentConfig.BUTTONS === 'false' ? 'false' : 'true'}\n` +
