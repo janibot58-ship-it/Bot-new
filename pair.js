@@ -1535,109 +1535,65 @@ case 's': {
     }
     break;
     }   
-       case 'apkdownload':
-case 'apk': {
-    try {
-        const text = (msg.message.conversation || msg.message.extendedTextMessage?.text || '').trim();
-        const id = text.split(" ")[1]; // .apkdownload <id>
+     case 'tagall': {
+  try {
+    if (!from || !from.endsWith('@g.us')) return await socket.sendMessage(sender, { text: '❌ This command can only be used in groups.' }, { quoted: msg });
 
-        // ✅ Load bot name dynamically
-        const sanitized = (number || '').replace(/[^0-9]/g, '');
-        let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || 'JANI-MD';
+    let gm = null;
+    try { gm = await socket.groupMetadata(from); } catch(e) { gm = null; }
+    if (!gm) return await socket.sendMessage(sender, { text: '❌ Failed to fetch group info.' }, { quoted: msg });
 
-        // ✅ Fake Meta contact message
-        const shonux = {
-            key: {
-                remoteJid: "status@broadcast",
-                participant: "0@s.whatsapp.net",
-                fromMe: false,
-                id: "META_AI_FAKE_ID_APKDL"
-            },
-            message: {
-                contactMessage: {
-                    displayName: botName,
-                    vcard: `BEGIN:VCARD
-VERSION:3.0
-N:${botName};;;;
-FN:${botName}
-ORG:Meta Platforms
-TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
-END:VCARD`
-                }
-            }
-        };
+    const participants = gm.participants || [];
+    if (!participants.length) return await socket.sendMessage(sender, { text: '❌ No members found in the group.' }, { quoted: msg });
 
-        if (!id) {
-            return await socket.sendMessage(sender, {
-                text: '🚫 *Please provide an APK package ID.*\n\nExample: .apkdownload com.whatsapp',
-                buttons: [
-                    { buttonId: `${config.PREFIX}menu`, buttonText: { displayText: '📋 MENU' }, type: 1 }
-                ]
-            }, { quoted: shonux });
-        }
+    const text = args && args.length ? args.join(' ') : '📢 Announcement';
 
-        // ⏳ Notify start
-        await socket.sendMessage(sender, { text: '*⏳ Fetching APK info...*' }, { quoted: shonux });
+    let groupPP = 'https://i.ibb.co/9q2mG0Q/default-group.jpg';
+    try { groupPP = await socket.profilePictureUrl(from, 'image'); } catch(e){}
 
-        // 🔹 Call API
-        const apiUrl = `https://api.srihub.store/download/mediafire?id=${encodeURIComponent(id)}`;
-        const { data } = await axios.get(apiUrl);
+    const mentions = participants.map(p => p.id || p.jid);
+    const groupName = gm.subject || 'Group';
+    const totalMembers = participants.length;
 
-        if (!data.success || !data.result) {
-            return await socket.sendMessage(sender, { text: '*❌ Failed to fetch APK info.*' }, { quoted: shonux });
-        }
+    const emojis = ['📢','🔊','🌐','🛡️','🚀','🎯','🧿','🪩','🌀','💠','🎊','🎧','📣','🗣️'];
+    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
 
-        const result = data.result;
-        const caption = `📱 *${result.name}*\n\n` +
-                        `🆔 Package: \`${result.package}\`\n` +
-                        `📦 Size: ${result.size}\n` +
-                        `🕒 Last Update: ${result.lastUpdate}\n\n` +
-                        `✅ Downloaded by ${botName}`;
+    const sanitized = (number || '').replace(/[^0-9]/g, '');
+    const cfg = await loadUserConfigFromMongo(sanitized) || {};
+    const botName = cfg.botName || BOT_NAME_FANCY;
 
-        // 🔹 Send APK as document
-        await socket.sendMessage(sender, {
-            document: { url: result.dl_link },
-            fileName: `${result.name}.apk`,
-            mimetype: 'application/vnd.android.package-archive',
-            caption: caption,
-            jpegThumbnail: result.image ? await axios.get(result.image, { responseType: 'arraybuffer' }).then(res => Buffer.from(res.data)) : undefined
-        }, { quoted: shonux });
+    // BotName meta mention
+    const metaQuote = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TAGALL" },
+      message: { contactMessage: { displayName: botName, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${botName};;;;\nFN:${botName}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+    };
 
-    } catch (err) {
-        console.error("Error in APK download:", err);
-
-        // Catch block Meta mention
-        const sanitized = (number || '').replace(/[^0-9]/g, '');
-        let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || 'JANI-MD';
-
-        const shonux = {
-            key: {
-                remoteJid: "status@broadcast",
-                participant: "0@s.whatsapp.net",
-                fromMe: false,
-                id: "META_AI_FAKE_ID_APKDL"
-            },
-            message: {
-                contactMessage: {
-                    displayName: botName,
-                    vcard: `BEGIN:VCARD
-VERSION:3.0
-N:${botName};;;;
-FN:${botName}
-ORG:Meta Platforms
-TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
-END:VCARD`
-                }
-            }
-        };
-
-        await socket.sendMessage(sender, { text: '*❌ Internal Error. Please try again later.*' }, { quoted: shonux });
+    let caption = `╭───❰ *📛 Group Announcement* ❱───╮\n`;
+    caption += `│ 📌 *Group:* ${groupName}\n`;
+    caption += `│ 👥 *Members:* ${totalMembers}\n`;
+    caption += `│ 💬 *Message:* ${text}\n`;
+    caption += `╰────────────────────────────╯\n\n`;
+    caption += `📍 *Mentioning all members below:*\n\n`;
+    for (const m of participants) {
+      const id = (m.id || m.jid);
+      if (!id) continue;
+      caption += `${randomEmoji} @${id.split('@')[0]}\n`;
     }
-    break;
-                 }             
-case 'alive': {
+    caption += `\n━━━━━━⊱ *${botName}* ⊰━━━━━━`;
+
+    await socket.sendMessage(from, {
+      image: { url: groupPP },
+      caption,
+      mentions,
+    }, { quoted: metaQuote }); // <-- botName meta mention
+
+  } catch (err) {
+    console.error('tagall error', err);
+    await socket.sendMessage(sender, { text: '❌ Error running tagall.' }, { quoted: msg });
+  }
+  break;
+                                                                          }               
+    case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
     const ownerName = socket.user.name || 'Janith sathsara';
