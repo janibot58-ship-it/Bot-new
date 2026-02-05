@@ -2956,30 +2956,61 @@ case 'autolike': {
     }, { quoted: msg });
     break;
 }
-
 case 'autorecording': {
+  await socket.sendMessage(sender, { react: { text: '🎥', key: msg.key } });
+  try {
+    const sanitized = (number || '').replace(/[^0-9]/g, '');
+    const senderNum = (nowsender || '').split('@')[0];
+    const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
     
-
-    const currentStatus = userConfig.AUTO_RECORDING || config.AUTO_RECORDING;
-    if (!args[0] || !['on', 'off'].includes(args[0].toLowerCase())) {
-        return await socket.sendMessage(sender, {
-            text: `*Current:* ${currentStatus}\n*Usage:* ${userConfig.PREFIX || config.PREFIX}autorecording [on/off]`
-        }, { quoted: msg });
+    if (senderNum !== sanitized && senderNum !== ownerNum) {
+      const shonux = {
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_RECORDING1" },
+        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+      };
+      return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change auto recording.' }, { quoted: shonux });
     }
-
-    const newStatus = args[0].toLowerCase() === 'on' ? 'true' : 'false';
-
-    const currentUserConfig = (await loadUserConfigFromMongoDB(number)) || { ...config };
-    currentUserConfig.AUTO_RECORDING = newStatus;
-    await updateUserConfig(number, currentUserConfig);
-    socket.userConfig.AUTO_RECORDING = newStatus;
-
-    await socket.sendMessage(sender, {
-        text: `✅ *Auto Recording:* ${newStatus === 'true' ? '✅ ON' : '❌ OFF'}`
-    }, { quoted: msg });
-    break;
-}
-
+    
+    let q = args[0];
+    
+    if (q === 'on' || q === 'off') {
+      const userConfig = await loadUserConfigFromMongo(sanitized) || {};
+      userConfig.AUTO_RECORDING = (q === 'on') ? "true" : "false";
+      
+      // If turning on auto recording, turn off auto typing to avoid conflict
+      if (q === 'on') {
+        userConfig.AUTO_TYPING = "false";
+      }
+      
+      await setUserConfigInMongo(sanitized, userConfig);
+      
+      // Immediately stop any current recording if turning off
+      if (q === 'off') {
+        await socket.sendPresenceUpdate('available', sender);
+      }
+      
+      const shonux = {
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_RECORDING2" },
+        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+      };
+      await socket.sendMessage(sender, { text: `✅ *Auto Recording ${q === 'on' ? 'ENABLED' : 'DISABLED'}*` }, { quoted: shonux });
+    } else {
+      const shonux = {
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_RECORDING3" },
+        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+      };
+      await socket.sendMessage(sender, { text: "❌ *Invalid! Use:* .autorecording on/off" }, { quoted: shonux });
+    }
+  } catch (e) {
+    console.error('Autorecording error:', e);
+    const shonux = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_RECORDING4" },
+      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+    };
+    await socket.sendMessage(sender, { text: "*❌ Error updating auto recording!*" }, { quoted: shonux });
+  }
+  break;
+            }
 case 'autoreact': {
     const subCommand = args[0]?.toLowerCase();
     const currentUserConfig = (await loadUserConfigFromMongoDB(number)) || { ...config };
