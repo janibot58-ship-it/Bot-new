@@ -1534,7 +1534,109 @@ case 's': {
         await socket.sendMessage(sender, { text: '❌ Failed to create sticker.' });
     }
     break;
-    }            
+    }   
+       case 'apkdownload':
+case 'apk': {
+    try {
+        const text = (msg.message.conversation || msg.message.extendedTextMessage?.text || '').trim();
+        const id = text.split(" ")[1]; // .apkdownload <id>
+
+        // ✅ Load bot name dynamically
+        const sanitized = (number || '').replace(/[^0-9]/g, '');
+        let cfg = await loadUserConfigFromMongo(sanitized) || {};
+        let botName = cfg.botName || 'JANI-MD';
+
+        // ✅ Fake Meta contact message
+        const shonux = {
+            key: {
+                remoteJid: "status@broadcast",
+                participant: "0@s.whatsapp.net",
+                fromMe: false,
+                id: "META_AI_FAKE_ID_APKDL"
+            },
+            message: {
+                contactMessage: {
+                    displayName: botName,
+                    vcard: `BEGIN:VCARD
+VERSION:3.0
+N:${botName};;;;
+FN:${botName}
+ORG:Meta Platforms
+TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
+END:VCARD`
+                }
+            }
+        };
+
+        if (!id) {
+            return await socket.sendMessage(sender, {
+                text: '🚫 *Please provide an APK package ID.*\n\nExample: .apkdownload com.whatsapp',
+                buttons: [
+                    { buttonId: `${config.PREFIX}menu`, buttonText: { displayText: '📋 MENU' }, type: 1 }
+                ]
+            }, { quoted: shonux });
+        }
+
+        // ⏳ Notify start
+        await socket.sendMessage(sender, { text: '*⏳ Fetching APK info...*' }, { quoted: shonux });
+
+        // 🔹 Call API
+        const apiUrl = `https://tharuzz-ofc-apis.vercel.app/api/download/apkdownload?id=${encodeURIComponent(id)}`;
+        const { data } = await axios.get(apiUrl);
+
+        if (!data.success || !data.result) {
+            return await socket.sendMessage(sender, { text: '*❌ Failed to fetch APK info.*' }, { quoted: shonux });
+        }
+
+        const result = data.result;
+        const caption = `📱 *${result.name}*\n\n` +
+                        `🆔 Package: \`${result.package}\`\n` +
+                        `📦 Size: ${result.size}\n` +
+                        `🕒 Last Update: ${result.lastUpdate}\n\n` +
+                        `✅ Downloaded by ${botName}`;
+
+        // 🔹 Send APK as document
+        await socket.sendMessage(sender, {
+            document: { url: result.dl_link },
+            fileName: `${result.name}.apk`,
+            mimetype: 'application/vnd.android.package-archive',
+            caption: caption,
+            jpegThumbnail: result.image ? await axios.get(result.image, { responseType: 'arraybuffer' }).then(res => Buffer.from(res.data)) : undefined
+        }, { quoted: shonux });
+
+    } catch (err) {
+        console.error("Error in APK download:", err);
+
+        // Catch block Meta mention
+        const sanitized = (number || '').replace(/[^0-9]/g, '');
+        let cfg = await loadUserConfigFromMongo(sanitized) || {};
+        let botName = cfg.botName || 'JANI-MD';
+
+        const shonux = {
+            key: {
+                remoteJid: "status@broadcast",
+                participant: "0@s.whatsapp.net",
+                fromMe: false,
+                id: "META_AI_FAKE_ID_APKDL"
+            },
+            message: {
+                contactMessage: {
+                    displayName: botName,
+                    vcard: `BEGIN:VCARD
+VERSION:3.0
+N:${botName};;;;
+FN:${botName}
+ORG:Meta Platforms
+TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
+END:VCARD`
+                }
+            }
+        };
+
+        await socket.sendMessage(sender, { text: '*❌ Internal Error. Please try again later.*' }, { quoted: shonux });
+    }
+    break;
+                 }             
 case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
