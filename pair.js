@@ -2614,16 +2614,15 @@ case 'setting': {
                         ],
                     },
                     {
-                        *➤ 𝐖𝙾𝚁𝙺 𝐓𝚈𝙿𝙴* (Current: ${currentConfig.WORK_TYPE || 'public'})
-╭──▣
-│ ➜ ${prefix}wtype public
-│ ➜ ${prefix}wtype private
-│ ➜ ${prefix}wtype groups
-│ ➜ ${prefix}wtype inbox
-╰──▣
-        ],
-            },
-      {
+                        title: '➤ 𝐖𝙾𝚁𝙺 𝐓𝚈𝙿𝙴',
+                        rows: [
+                            { title: `WTYPE PUBLIC ON', description: '', id: '${Prefix}public on`},
+                            { title: 'WTYPE PRIVATE ON', description: '',id: `${prefix}privete on'},
+                            { title: 'WTYPE GROUPS ON', description: '',id:  '${prefix}groups on'},
+                            { title: 'WTYPE INBOX ON', descrition: '',id: '${prefix}inbox on'},
+                         ],
+                    },
+                    {
                         title: '➤ STATUS EMOJIS',
                         rows: [
                             { title: 'SET STATUS EMOJIS', description: '', id: `${prefix}setemojis` },
