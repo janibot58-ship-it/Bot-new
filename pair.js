@@ -1479,7 +1479,62 @@ case 'csong': {
     await socket.sendMessage(sender, { text: '❌ Error occurred while processing block command.' }, { quoted: msg });
   }
   break;
-        }                  
+        }     
+        case 'sticker':
+case 's': {
+    const fs = require('fs');
+    const { exec } = require('child_process');
+
+    const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+    const mime = msg.message?.imageMessage?.mimetype || 
+                 msg.message?.videoMessage?.mimetype || 
+                 quoted?.imageMessage?.mimetype || 
+                 quoted?.videoMessage?.mimetype;
+
+    if (!mime) return await socket.sendMessage(sender, { text: '❌ Reply to an image or video!' }, { quoted: msg });
+
+    try {
+        // Download Media
+        let media = await downloadQuotedMedia(msg.message?.imageMessage ? msg.message : quoted);
+        let buffer = media.buffer;
+
+        // Paths
+        let ran = generateOTP(); // Random ID
+        let pathIn = `./${ran}.${mime.split('/')[1]}`;
+        let pathOut = `./${ran}.webp`;
+
+        fs.writeFileSync(pathIn, buffer);
+
+        // FFmpeg Conversion (Local)
+        let ffmpegCmd = '';
+        if (mime.includes('image')) {
+            ffmpegCmd = `ffmpeg -i ${pathIn} -vcodec libwebp -filter:v fps=fps=20 -lossless 1 -loop 0 -preset default -an -vsync 0 -s 512:512 ${pathOut}`;
+        } else {
+            ffmpegCmd = `ffmpeg -i ${pathIn} -vcodec libwebp -filter:v fps=fps=15 -lossless 1 -loop 0 -preset default -an -vsync 0 -s 512:512 ${pathOut}`;
+        }
+
+        exec(ffmpegCmd, async (err) => {
+            fs.unlinkSync(pathIn); // Delete input file
+
+            if (err) {
+                console.error(err);
+                return await socket.sendMessage(sender, { text: '❌ Error converting media.' });
+            }
+
+            // Send Sticker
+            await socket.sendMessage(sender, { 
+                sticker: fs.readFileSync(pathOut) 
+            }, { quoted: msg });
+
+            fs.unlinkSync(pathOut); // Delete output file
+        });
+
+    } catch (e) {
+        console.error(e);
+        await socket.sendMessage(sender, { text: '❌ Failed to create sticker.' });
+    }
+    break;
+    }            
 case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
@@ -1596,6 +1651,7 @@ case 'menu': {
                 { name: 'ig', description: 'Download Instagram video' },
                 { name: 'ts', description: 'Search TikTok videos' },
                 { name: 'yts', description: 'Search YouTube videos' },
+                { name: 'sticker',description: 'sticker'},
             ],
             main: [
                 { name: 'alive', description: 'Show bot status' },
@@ -1615,6 +1671,8 @@ case 'menu': {
                 { name: 'set', description: 'Set Setting Using Env' },
                 { name: 'setting', description: 'Setup YouOwn Setting' },
                 { name: 'jid', description: 'Get JID of a number' },
+                { name: 'block',description: 'numbare block' },
+                { name: 'unblock',description: 'numbare unblock' },
             ],
             group: [
                 { name: 'bomb', description: 'Send Bomb Message' },
@@ -3229,7 +3287,6 @@ if (!isOwner) {
   
   // If work type is "public", allow all (no restrictions needed)
 }
-// ========== END WORK TYPE RESTRICTIONS ==========
 // TikTok Downloader Command - Download TikTok Videos - Last Update 2025-August-14
 case 'tt':
 case 'ttdl':         
