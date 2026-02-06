@@ -1617,8 +1617,9 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
         console.error('SETBOTNAME ERROR:', e);
         await socket.sendMessage(m.key.remoteJid, { text: `❌ Error: ${e.message}` });
     }
-}
+
 break;
+}
                case 'setlogo': {
   // 1.Variables නිවැරදිව ඇති දැයි පරීක්ෂා කිරීම
   const targetNumber = (typeof number !== 'undefined' ? number : '');
