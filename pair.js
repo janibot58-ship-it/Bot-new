@@ -1579,38 +1579,32 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
                  }  
                     case 'setbotname': {
     try {
-        // Variables define වෙලා තියෙනවද කියලා check කිරීම
         const sanitized = (typeof number !== 'undefined' ? number : '').replace(/[^0-9]/g, '');
         const senderNum = (nowsender || '').split('@')[0];
         const ownerNum = (config?.OWNER_NUMBER || '').replace(/[^0-9]/g, '');
 
-        // Permission check
         if (senderNum !== sanitized && senderNum !== ownerNum) {
-            const shonux = {
-                key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME1" },
-                message: { contactMessage: { displayName: (typeof BOT_NAME_FANCY !== 'undefined' ? BOT_NAME_FANCY : 'Bot'), vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Bot;;;;\nFN:Bot\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-            };
-            return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change this session bot name.' }, { quoted: shonux });
+            // Permission denied message logic...
+            return;
         }
 
         const name = args.join(' ').trim();
-        if (!name) {
-            return await socket.sendMessage(sender, { text: '❗ Please provide a name. Example: `.setbotname JANI-MD`' });
-        }
+        if (!name) return await socket.sendMessage(sender, { text: '❗ නමක් ලබා දෙන්න.' });
 
-        // Database logic
-        let cfg = await loadUserConfigFromMongo(sanitized) || {};
+        // Database logic fix:
+        let cfg = await loadUserConfigFromMongo(sanitized) || { userId: sanitized };
         cfg.botName = name;
+        
         await setUserConfigInMongo(sanitized, cfg);
 
-        await socket.sendMessage(sender, { text: `✅ Bot display name set to: ${name}` });
+        await socket.sendMessage(sender, { text: `✅ Bot නම සාර්ථකව වෙනස් කළා: ${name}` });
 
     } catch (e) {
         console.error('setbotname error:', e);
         await socket.sendMessage(sender, { text: `❌ Error: ${e.message}` });
     }
     break;
-                                                           }
+            }                                                           }
                case 'setlogo': {
   // 1.Variables නිවැරදිව ඇති දැයි පරීක්ෂා කිරීම
   const targetNumber = (typeof number !== 'undefined' ? number : '');
