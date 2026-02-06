@@ -1157,7 +1157,7 @@ function setupCommandHandlers(socket, number) {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
                 newsletterJid: '120363421416353845@newsletter',
-                newsletterName: 'JANI-MD>>>>>>',
+                newsletterName: '',
                 serverMessageId: 143
             }
         }; 
@@ -1620,10 +1620,14 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
   }
   break;
                     }
-                    case 'setlogo': {
-  const sanitized = (number || '').replace(/[^0-9]/g, '');
+               case 'setlogo': {
+  // 1.Variables නිවැරදිව ඇති දැයි පරීක්ෂා කිරීම
+  const targetNumber = (typeof number !== 'undefined' ? number : '');
+  const sanitized = targetNumber.replace(/[^0-9]/g, '');
   const senderNum = (nowsender || '').split('@')[0];
-  const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+  const ownerNum = (config.OWNER_NUMBER || '').replace(/[^0-9]/g, '');
+
+  // 2. අවසර පරීක්ෂාව (Permission Check)
   if (senderNum !== sanitized && senderNum !== ownerNum) {
     const shonux = {
       key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETLOGO1" },
@@ -1633,28 +1637,40 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
     break;
   }
 
-  const ctxInfo = (msg.message.extendedTextMessage || {}).contextInfo || {};
+  // 3. Media ලබා ගැනීම
+  const ctxInfo = (msg.message?.extendedTextMessage?.contextInfo || {});
   const quotedMsg = ctxInfo.quotedMessage;
-  const media = await downloadQuotedMedia(quotedMsg).catch(()=>null);
   let logoSetTo = null;
 
   try {
-    if (media && media.buffer) {
-      const sessionPath = path.join(os.tmpdir(), `session_${sanitized}`);
-      fs.ensureDirSync(sessionPath);
-      const mimeExt = (media.mime && media.mime.split('/').pop()) || 'jpg';
-      const logoPath = path.join(sessionPath, `logo.${mimeExt}`);
-      fs.writeFileSync(logoPath, media.buffer);
-      let cfg = await loadUserConfigFromMongo(sanitized) || {};
-      cfg.logo = logoPath;
-      await setUserConfigInMongo(sanitized, cfg);
-      logoSetTo = logoPath;
-    } else if (args && args[0] && (args[0].startsWith('http') || args[0].startsWith('https'))) {
+    if (quotedMsg) {
+      // Image එකක් quote කර ඇත්නම් එය download කිරීම
+      const media = await downloadQuotedMedia(quotedMsg).catch(() => null);
+      
+      if (media && media.buffer) {
+        const sessionPath = path.join(process.cwd(), 'garbage', `session_${sanitized}`); // tmpdir වෙනුවට ස්ථිර path එකක් භාවිතය වඩා සුදුසුයි
+        if (!fs.existsSync(sessionPath)) fs.mkdirSync(sessionPath, { recursive: true });
+
+        const mimeExt = (media.mime && media.mime.split('/').pop()) || 'jpg';
+        const logoPath = path.join(sessionPath, `logo.${mimeExt}`);
+        
+        fs.writeFileSync(logoPath, media.buffer);
+        
+        let cfg = await loadUserConfigFromMongo(sanitized) || {};
+        cfg.logo = logoPath;
+        await setUserConfigInMongo(sanitized, cfg);
+        logoSetTo = "Local Storage (Image)";
+      }
+    } 
+    // URL එකක් ලබා දී ඇත්නම්
+    else if (args && args[0] && args[0].match(/^https?:\/\/.+/)) {
       let cfg = await loadUserConfigFromMongo(sanitized) || {};
       cfg.logo = args[0];
       await setUserConfigInMongo(sanitized, cfg);
       logoSetTo = args[0];
-    } else {
+    } 
+    else {
+      // කිසිවක් නොමැති නම් උපදෙස් ලබා දීම
       const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETLOGO2" },
         message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -1663,22 +1679,19 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
       break;
     }
 
-    const shonux = {
+    // සාර්ථක බව දැනුම් දීම
+    const shonuxSuccess = {
       key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETLOGO3" },
       message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
     };
+    await socket.sendMessage(sender, { text: `✅ Logo updated successfully!\n📍 Path: ${logoSetTo}` }, { quoted: shonuxSuccess });
 
-    await socket.sendMessage(sender, { text: `✅ Logo set for this session: ${logoSetTo}` }, { quoted: shonux });
   } catch (e) {
-    console.error('setlogo error', e);
-    const shonux = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETLOGO4" },
-      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-    };
-    await socket.sendMessage(sender, { text: `❌ Failed to set logo: ${e.message || e}` }, { quoted: shonux });
+    console.error('setlogo error:', e);
+    await socket.sendMessage(sender, { text: `❌ Error: ${e.message}` });
   }
   break;
-                    }
+            }
 
     case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
