@@ -1443,26 +1443,27 @@ ${footer}`;
     break;
         }                       
 // Menu Command - shows all commands in a button menu or text format - Last Update 2025-August-14
- case 'list':
+   case 'list':
 case 'pannel':
 case 'menu': {
     try {
         const useButton = userConfig.BUTTON === 'true';
 
-        // 1. මෙනු විධානයට React කිරීම
+        // 1. React to the command
         await socket.sendMessage(m.chat, {
             react: { text: '📜', key: m.key }
         });
 
-        // 2. හඬ පණිවිඩය (Voice Note) යැවීම
-        // මෙහි url එකට ඔබේ .mp3 හෝ .ogg link එකක් ලබා දෙන්න
+        // 2. Send Voice Note (PTT)
+        // Note: Using an .mp4 link for audio works in some Baileys versions, 
+        // but .mp3 or .ogg is more stable.
         await socket.sendMessage(m.chat, { 
             audio: { url: 'https://files.catbox.moe/g0crh5.mp4' }, 
             mimetype: 'audio/mp4', 
             ptt: true 
         }, { quoted: m });
 
-        // Commands list grouped by category
+        // 3. Define Command Categories
         const commandsInfo = {
             download: [
                 { name: 'song', description: 'Download Songs' },
@@ -1471,37 +1472,25 @@ case 'menu': {
                 { name: 'img', description: 'Download Images' },
                 { name: 'fb', description: 'Download Facebook video' },
                 { name: 'ig', description: 'Download Instagram video' },
-                { name: 'ts', description: 'Search TikTok videos' },
-                { name: 'yts', description: 'Search YouTube videos' },
+                { name: 'sticker', description: 'Create Sticker' }
             ],
             main: [
                 { name: 'alive', description: 'Show bot status' },
-                { name: 'menu', description: 'Show all commands' },
                 { name: 'ping', description: 'Get bot speed' },
-                { name: 'freebot', description: 'Setup Free Bot' },
                 { name: 'owner', description: 'Contact Bot Owner' },
-                { name: 'getdp', description: 'Get Profile Picture' },
-                { name: 'logo', description: 'Create Logo' },
-                { name: 'fancy', description: 'View Fancy Text' },
-                { name: 'winfo', description: 'Get User Profile Picture' },
-                { name: 'cid', description: 'Get Channel ID' },
+                { name: 'fancy', description: 'View Fancy Text' }
             ],
             owner: [
-                { name: 'deleteme', description: 'Delete your session' },
-                { name: 'fc', description: 'Follow newsletter channel' },
-                { name: 'set', description: 'Set Setting Using Env' },
-                { name: 'setting', description: 'Setup YouOwn Setting' },
-                { name: 'jid', description: 'Get JID of a number' },
-            ],
-            group: [
-                { name: 'bomb', description: 'Send Bomb Message' },
+                { name: 'block', description: 'Block a user' },
+                { name: 'unblock', description: 'Unblock a user' },
+                { name: 'set', description: 'Update Settings' }
             ],
             ai: [
-                { name: 'aiimg', description: 'Generate AI Image' },
-            ],
+                { name: 'aiimg', description: 'Generate AI Image' }
+            ]
         };
 
-        // 🕒 Uptime ගණනය කිරීම
+        // 4. Calculate Uptime
         const startTime = socketCreationTime.get(number) || Date.now();
         const uptime = Math.floor((Date.now() - startTime) / 1000);
         const hours = Math.floor(uptime / 3600);
@@ -1509,85 +1498,71 @@ case 'menu': {
         const seconds = Math.floor(uptime % 60);
         const ownerName = socket.user.name || 'Janith Sathsara';
 
-        // 📝 මෙනු එකේ ප්‍රධාන ශීර්ෂය
-        const menuCaption = `🤩 *Hello ${pushname}*
-> WELCOME TO ${botName} 🪀
+        // 5. Menu Captions
+        const menuHeader = `🤩 *Hello ${pushname}*\n> WELCOME TO ${botName} 🪀\n\n` +
+            `*╭─「 ꜱᴛᴀᴛᴜꜱ ᴅᴇᴛᴀɪʟꜱ 」*\n` +
+            `*│*👤 \`User\` : ${pushname}\n` +
+            `*│*🧑‍💻 \`Owner\` : ${ownerName}\n` +
+            `*│*✒️ \`Prefix\` : ${prefix}\n` +
+            `*│*🧬 \`Version\` : ${version}\n` +
+            `*│*📟 \`Uptime\` : ${hours}h ${minutes}m ${seconds}s\n` +
+            `*╰──────────●●►*`;
 
-*╭─「 ꜱᴛᴀᴛᴜꜱ ᴅᴇᴛᴀɪʟꜱ 」*
-*│*👤 \`User\` : ${pushname}
-*│*🧑‍💻 \`Owner\` : ${ownerName}
-*│*✒️ \`Prefix\` : ${prefix}
-*│*🧬 \`Version\` : ${version}
-*│*📟 \`Uptime\` : ${hours}h ${minutes}m ${seconds}s
-*╰──────────●●►*
-
-${footer}`;
-    const menuCaption2 = `🤩 *Hello ${pushname}*
-> WELCOME TO ${botName} 🪀
-
-*╭─「 ꜱᴛᴀᴛᴜꜱ ᴅᴇᴛᴀɪʟꜱ 」*
-*│*👤 \`User\` : ${pushname}
-*│*🧑‍💻 \`Owner\` : ${ownerName}
-*│*✒️ \`Prefix\` : ${prefix}
-*│*🧬 \`Version\` : ${version}
-*│*📟 \`Uptime\` : ${hours}h ${minutes}m ${seconds}s
-*╰──────────●●►*`;
-
-        // 🔘 Button මෙනු එක
+        // 6. Send Button Menu or Text Menu
         if (useButton) {
             const sections = Object.entries(commandsInfo).map(([category, cmds]) => ({
-                title: category.toUpperCase() + ' CMD',
+                title: category.toUpperCase() + ' COMMANDS',
                 rows: cmds.map(cmd => ({
-                    title: cmd.name,
+                    title: prefix + cmd.name,
                     description: cmd.description,
-                    id: prefix + cmd.name,
-                })),
+                    id: prefix + cmd.name
+                }))
             }));
 
             await socket.sendMessage(m.chat, {
                 image: { url: logo },
-                caption: menuCaption,
+                caption: menuHeader + `\n\n${footer}`,
+                footer: footer,
                 buttons: [
                     {
                         buttonId: 'action',
-                        buttonText: { displayText: '📂 Menu Options' },
+                        buttonText: { displayText: '📂 View Menu' },
                         type: 4,
                         nativeFlowInfo: {
                             name: 'single_select',
                             paramsJson: JSON.stringify({
-                                title: 'Commands Menu ❏',
-                                sections: sections,
-                            }),
-                        },
-                    },
+                                title: 'Select a Category ❏',
+                                sections: sections
+                            })
+                        }
+                    }
                 ],
-                headerType: 1,
+                headerType: 4,
                 viewOnce: true,
                 contextInfo: contextInfo2
             }, { quoted: m });
 
-        // 📄 සාමාන්‍ය (Normal) මෙනු එක
         } else {
-            let fullMenu = menuCaption + `\n`;
+            // Normal Text Menu
+            let fullMenu = menuHeader + `\n`;
             for (const [category, cmds] of Object.entries(commandsInfo)) {
-                fullMenu += `\n> ${category.toUpperCase()} COMMANDS\n`;
+                fullMenu += `\n> *${category.toUpperCase()} COMMANDS*\n`;
                 fullMenu += `*╭──────────●●►*\n`;
-                fullMenu += cmds.map(c => `*│*❯❯◦ ${c.name}`).join('\n');
-                fullMenu += `\n*╰───────────●●►*`;
+                fullMenu += cmds.map(c => `*│* ❯ ${prefix}${c.name}`).join('\n');
+                fullMenu += `\n*╰───────────●●►*\n`;
             }
 
             await socket.sendMessage(m.chat, { 
                 image: { url: logo }, 
-                caption: fullMenu + `\n\n${footer}`, 
+                caption: fullMenu + `\n${footer}`, 
                 contextInfo 
             }, { quoted: m });
         }
-
     } catch (e) {
         console.error("Menu Error:", e);
     }
     break;
-                 }
+                }      
 // Logo Maker Command - Button Selection
 case 'logo': {
     const useButton = userConfig.BUTTON === 'true';
