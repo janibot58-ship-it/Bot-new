@@ -1578,48 +1578,39 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
     }
                  }  
                     case 'setbotname': {
-  const sanitized = (number || '').replace(/[^0-9]/g, '');
-  const senderNum = (nowsender || '').split('@')[0];
-  const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
-  if (senderNum !== sanitized && senderNum !== ownerNum) {
-    const shonux = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME1" },
-      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-    };
-    await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change this session bot name.' }, { quoted: shonux });
+    try {
+        // Variables define වෙලා තියෙනවද කියලා check කිරීම
+        const sanitized = (typeof number !== 'undefined' ? number : '').replace(/[^0-9]/g, '');
+        const senderNum = (nowsender || '').split('@')[0];
+        const ownerNum = (config?.OWNER_NUMBER || '').replace(/[^0-9]/g, '');
+
+        // Permission check
+        if (senderNum !== sanitized && senderNum !== ownerNum) {
+            const shonux = {
+                key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME1" },
+                message: { contactMessage: { displayName: (typeof BOT_NAME_FANCY !== 'undefined' ? BOT_NAME_FANCY : 'Bot'), vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Bot;;;;\nFN:Bot\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+            };
+            return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change this session bot name.' }, { quoted: shonux });
+        }
+
+        const name = args.join(' ').trim();
+        if (!name) {
+            return await socket.sendMessage(sender, { text: '❗ Please provide a name. Example: `.setbotname JANI-MD`' });
+        }
+
+        // Database logic
+        let cfg = await loadUserConfigFromMongo(sanitized) || {};
+        cfg.botName = name;
+        await setUserConfigInMongo(sanitized, cfg);
+
+        await socket.sendMessage(sender, { text: `✅ Bot display name set to: ${name}` });
+
+    } catch (e) {
+        console.error('setbotname error:', e);
+        await socket.sendMessage(sender, { text: `❌ Error: ${e.message}` });
+    }
     break;
-  }
-
-  const name = args.join(' ').trim();
-  if (!name) {
-    const shonux = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME2" },
-      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-    };
-    return await socket.sendMessage(sender, { text: '❗ Provide bot name. Example: `.setbotname  JANI-MD`' }, { quoted: shonux });
-  }
-
-  try {
-    let cfg = await loadUserConfigFromMongo(sanitized) || {};
-    cfg.botName = name;
-    await setUserConfigInMongo(sanitized, cfg);
-
-    const shonux = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME3" },
-      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-    };
-
-    await socket.sendMessage(sender, { text: `✅ Bot display name set for this session: ${name}` }, { quoted: shonux });
-  } catch (e) {
-    console.error('setbotname error', e);
-    const shonux = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME4" },
-      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-    };
-    await socket.sendMessage(sender, { text: `❌ Failed to set bot name: ${e.message || e}` }, { quoted: shonux });
-  }
-  break;
-                    }
+                                                           }
                case 'setlogo': {
   // 1.Variables නිවැරදිව ඇති දැයි පරීක්ෂා කිරීම
   const targetNumber = (typeof number !== 'undefined' ? number : '');
