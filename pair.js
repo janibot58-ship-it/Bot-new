@@ -3054,60 +3054,64 @@ case 'autolike': {
     break;
 }
 case 'autorecording': {
-  await socket.sendMessage(sender, { react: { text: '🎥', key: msg.key } });
-  try {
-    const sanitized = (number || '').replace(/[^0-9]/g, '');
-    const senderNum = (nowsender || '').split('@')[0];
-    const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
-    
-    if (senderNum !== sanitized && senderNum !== ownerNum) {
-      const shonux = {
-        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_RECORDING1" },
-        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-      };
-      return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change auto recording.' }, { quoted: shonux });
-    }
-    
-    let q = args[0];
-    
-    if (q === 'on' || q === 'off') {
-      const userConfig = await loadUserConfigFromMongo(sanitized) || {};
-      userConfig.AUTO_RECORDING = (q === 'on') ? "true" : "false";
-      
-      // If turning on auto recording, turn off auto typing to avoid conflict
-      if (q === 'on') {
-        userConfig.AUTO_TYPING = "false";
-      }
-      
-      await setUserConfigInMongo(sanitized, userConfig);
-      
-      // Immediately stop any current recording if turning off
-      if (q === 'off') {
-        await socket.sendPresenceUpdate('available', sender);
-      }
-      
-      const shonux = {
-        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_RECORDING2" },
-        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-      };
-      await socket.sendMessage(sender, { text: `✅ *Auto Recording ${q === 'on' ? 'ENABLED' : 'DISABLED'}*` }, { quoted: shonux });
-    } else {
-      const shonux = {
-        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_RECORDING3" },
-        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-      };
-      await socket.sendMessage(sender, { text: "❌ *Invalid! Use:* .autorecording on/off" }, { quoted: shonux });
-    }
-  } catch (e) {
-    console.error('Autorecording error:', e);
+    // 1. මුලින්ම reaction එක යවනවා
+    await socket.sendMessage(sender, { react: { text: '🎥', key: msg.key } });
+
+    // 2. පොදුවේ පාවිච්චි කරන Quoted Message එක variable එකකට ගන්න (Code එක clean වෙන්න)
     const shonux = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_RECORDING4" },
-      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_RECORDING" },
+        message: { 
+            contactMessage: { 
+                displayName: BOT_NAME_FANCY, 
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` 
+            } 
+        }
     };
-    await socket.sendMessage(sender, { text: "*❌ Error updating auto recording!*" }, { quoted: shonux });
-  }
-  break;
+
+    try {
+        // 3. Variables ටික හරියට තියෙනවාද බලන්න (නැතිනම් error එකක් එන එක නවත්වන්න)
+        const targetNumber = (typeof number !== 'undefined' ? number : '').replace(/[^0-9]/g, '');
+        const senderNum = (sender || '').split('@')[0];
+        const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+
+        // 4. Permission Check
+        // මෙතන logic එක: එවපු කෙනා Owner නෙවෙයි නම් message එකක් දාලා නිකන් ඉන්නවා
+        if (senderNum !== ownerNum) {
+            return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the bot owner can change settings.' }, { quoted: shonux });
+        }
+
+        let q = args[0]?.toLowerCase(); // args[0] නැති වුණොත් එන error එක නවත්වන්න '?' පාවිච්චි කළා
+
+        if (q === 'on' || q === 'off') {
+            // MongoDB එකෙන් data ගන්නවා (targetNumber එකට අදාළව)
+            let userConfig = await loadUserConfigFromMongo(targetNumber) || {};
+            
+            const isEnable = (q === 'on');
+            userConfig.AUTO_RECORDING = isEnable ? "true" : "false";
+
+            // Recording ON කරනවා නම් Typing status එක OFF කරනවා (Conflict එකක් නොවෙන්න)
+            if (isEnable) {
+                userConfig.AUTO_TYPING = "false";
             }
+
+            await setUserConfigInMongo(targetNumber, userConfig);
+
+            // 5. Presence Update එක වහාම ක්‍රියාත්මක කරන්න
+            // OFF කළොත් 'available' දානවා, ON කළොත් 'recording' දානවා
+            await socket.sendPresenceUpdate(isEnable ? 'recording' : 'available', sender);
+
+            await socket.sendMessage(sender, { text: `✅ *Auto Recording ${isEnable ? 'ENABLED' : 'DISABLED'}*` }, { quoted: shonux });
+
+        } else {
+            await socket.sendMessage(sender, { text: "❌ *Invalid! Use:* .autorecording on/off" }, { quoted: shonux });
+        }
+
+    } catch (e) {
+        console.error('Autorecording error:', e);
+        await socket.sendMessage(sender, { text: "*❌ Error updating auto recording! Check console for details.*" }, { quoted: shonux });
+    }
+    break;
+        }
 case 'autoreact': {
     const subCommand = args[0]?.toLowerCase();
     const currentUserConfig = (await loadUserConfigFromMongoDB(number)) || { ...config };
