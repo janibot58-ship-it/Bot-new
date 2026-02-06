@@ -1576,7 +1576,6 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
         console.error(e);
         await socket.sendMessage(sender, { text: '❌ *Error uploading media.*' });
     }
-
     case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
