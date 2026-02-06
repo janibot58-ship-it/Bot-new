@@ -1576,191 +1576,177 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
     await socket.sendMessage(sender, { text: '❌ Error occurred while processing block command.' }, { quoted: msg });
   }
   break;
-      }
-                    case 'sticker':
-case 's': {
-    const fs = require('fs');
-    const { exec } = require('child_process');
-
-    const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-    const mime = msg.message?.imageMessage?.mimetype || 
-                 msg.message?.videoMessage?.mimetype || 
-                 quoted?.imageMessage?.mimetype || 
-                 quoted?.videoMessage?.mimetype;
-
-    if (!mime) return await socket.sendMessage(sender, { text: '❌ Reply to an image or video!' }, { quoted: msg });
-
-    try {
-        // Download Media
-        let media = await downloadQuotedMedia(msg.message?.imageMessage ? msg.message : quoted);
-        let buffer = media.buffer;
-
-        // Paths
-        let ran = generateOTP(); // Random ID
-        let pathIn = `./${ran}.${mime.split('/')[1]}`;
-        let pathOut = `./${ran}.webp`;
-
-        fs.writeFileSync(pathIn, buffer);
-
-        // FFmpeg Conversion (Local)
-        let ffmpegCmd = '';
-        if (mime.includes('image')) {
-            ffmpegCmd = `ffmpeg -i ${pathIn} -vcodec libwebp -filter:v fps=fps=20 -lossless 1 -loop 0 -preset default -an -vsync 0 -s 512:512 ${pathOut}`;
-        } else {
-            ffmpegCmd = `ffmpeg -i ${pathIn} -vcodec libwebp -filter:v fps=fps=15 -lossless 1 -loop 0 -preset default -an -vsync 0 -s 512:512 ${pathOut}`;
-        }
-
-        exec(ffmpegCmd, async (err) => {
-            fs.unlinkSync(pathIn); // Delete input file
-
-            if (err) {
-                console.error(err);
-                return await socket.sendMessage(sender, { text: '❌ Error converting media.' });
-            }
-
-            // Send Sticker
-            await socket.sendMessage(sender, { 
-                sticker: fs.readFileSync(pathOut) 
-            }, { quoted: msg });
-
-            fs.unlinkSync(pathOut); // Delete output file
-        });
-
-    } catch (e) {
-        console.error(e);
-        await socket.sendMessage(sender, { text: '❌ Failed to create sticker.' });
-    }
-    break;
-             }case 'apkdownload':
-case 'apk': {
-    try {
-        const text = (msg.message.conversation || msg.message.extendedTextMessage?.text || '').trim();
-        const id = text.split(" ")[1]; // .apkdownload <id>
-
-        // ✅ Load bot name dynamically
-        const sanitized = (number || '').replace(/[^0-9]/g, '');
-        let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || ' 💚𝐁𝐄𝐒𝐓𝐈𝐄_𝐌𝐈𝐍𝐈😘';
-
-        // ✅ Fake Meta contact message
-        const shonux = {
-            key: {
-                remoteJid: "status@broadcast",
-                participant: "0@s.whatsapp.net",
-                fromMe: false,
-                id: "META_AI_FAKE_ID_APKDL"
-            },
-            message: {
-                contactMessage: {
-                    displayName: botName,
-                    vcard: `BEGIN:VCARD
-VERSION:3.0
-N:${botName};;;;
-FN:${botName}
-ORG:Meta Platforms
-TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
-END:VCARD`
-                }
-            }
-        };
-
-        if (!id) {
-            return await socket.sendMessage(sender, {
-                text: '🚫 *Please provide an APK package ID.*\n\nExample: .apkdownload com.whatsapp',
-                buttons: [
-                    { buttonId: `${config.PREFIX}menu`, buttonText: { displayText: '📋 MENU' }, type: 1 }
-                ]
-            }, { quoted: shonux });
-        }
-
-        // ⏳ Notify start
-        await socket.sendMessage(sender, { text: '*⏳ Fetching APK info...*' }, { quoted: shonux });
-
-        // 🔹 Call API
-        const apiUrl = `https://tharuzz-ofc-apis.vercel.app/api/download/apkdownload?id=${encodeURIComponent(id)}`;
-        const { data } = await axios.get(apiUrl);
-
-        if (!data.success || !data.result) {
-            return await socket.sendMessage(sender, { text: '*❌ Failed to fetch APK info.*' }, { quoted: shonux });
-        }
-
-        const result = data.result;
-        const caption = `📱 *${result.name}*\n\n` +
-                        `🆔 Package: \`${result.package}\`\n` +
-                        `📦 Size: ${result.size}\n` +
-                        `🕒 Last Update: ${result.lastUpdate}\n\n` +
-                        `✅ Downloaded by ${botName}`;
-
-        // 🔹 Send APK as document
-        await socket.sendMessage(sender, {
-            document: { url: result.dl_link },
-            fileName: `${result.name}.apk`,
-            mimetype: 'application/vnd.android.package-archive',
-            caption: caption,
-            jpegThumbnail: result.image ? await axios.get(result.image, { responseType: 'arraybuffer' }).then(res => Buffer.from(res.data)) : undefined
-        }, { quoted: shonux });
-
-    } catch (err) {
-        console.error("Error in APK download:", err);
-
-        // Catch block Meta mention
-        const sanitized = (number || '').replace(/[^0-9]/g, '');
-        let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || ' 💚𝐁𝐄𝐒𝐓𝐈𝐄_𝐌𝐈𝐍𝐈😘';
-
-        const shonux = {
-            key: {
-                remoteJid: "status@broadcast",
-                participant: "0@s.whatsapp.net",
-                fromMe: false,
-                id: "META_AI_FAKE_ID_APKDL"
-            },
-            message: {
-                contactMessage: {
-                    displayName: botName,
-                    vcard: `BEGIN:VCARD
-VERSION:3.0
-N:${botName};;;;
-FN:${botName}
-ORG:Meta Platforms
-TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
-END:VCARD`
-                }
-            }
-        };
-
-        await socket.sendMessage(sender, { text: '*❌ Internal Error. Please try again later.*' }, { quoted: shonux });
-    }
-    break;
-}
-                    case 'lankadeepanews': {
+                    }
+                    case 'tagall': {
   try {
-    const sanitized = (number || '').replace(/[^0-9]/g, '');
-    const userCfg = await loadUserConfigFromMongo(sanitized) || {};
-    const botName = userCfg.botName || BOT_NAME_FANCY;
+    if (!from || !from.endsWith('@g.us')) return await socket.sendMessage(sender, { text: '❌ This command can only be used in groups.' }, { quoted: msg });
 
-    const botMention = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_LANKADEEPA" },
-      message: { contactMessage: { displayName: botName, vcard: `BEGIN:VCARD
-VERSION:3.0
-N:${botName};;;;
-FN:${botName}
-ORG:Meta Platforms
-TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
-END:VCARD` } }
+    let gm = null;
+    try { gm = await socket.groupMetadata(from); } catch(e) { gm = null; }
+    if (!gm) return await socket.sendMessage(sender, { text: '❌ Failed to fetch group info.' }, { quoted: msg });
+
+    const participants = gm.participants || [];
+    if (!participants.length) return await socket.sendMessage(sender, { text: '❌ No members found in the group.' }, { quoted: msg });
+
+    const text = args && args.length ? args.join(' ') : '📢 Announcement';
+
+    let groupPP = 'https://i.ibb.co/9q2mG0Q/default-group.jpg';
+    try { groupPP = await socket.profilePictureUrl(from, 'image'); } catch(e){}
+
+    const mentions = participants.map(p => p.id || p.jid);
+    const groupName = gm.subject || 'Group';
+    const totalMembers = participants.length;
+
+    const emojis = ['📢','🔊','🌐','🛡️','🚀','🎯','🧿','🪩','🌀','💠','🎊','🎧','📣','🗣️'];
+    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+    const sanitized = (number || '').replace(/[^0-9]/g, '');
+    const cfg = await loadUserConfigFromMongo(sanitized) || {};
+    const botName = cfg.botName || BOT_NAME_FANCY;
+
+    // BotName meta mention
+    const metaQuote = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TAGALL" },
+      message: { contactMessage: { displayName: botName, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${botName};;;;\nFN:${botName}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
     };
 
-    const res = await axios.get('https://saviya-kolla-api.koyeb.app/news/lankadeepa');
-    if (!res.data?.status || !res.data.result) return await socket.sendMessage(sender, { text: '❌ Failed to fetch Lankadeepa News.' }, { quoted: botMention });
+    let caption = `╭───❰ *📛 Group Announcement* ❱───╮\n`;
+    caption += `│ 📌 *Group:* ${groupName}\n`;
+    caption += `│ 👥 *Members:* ${totalMembers}\n`;
+    caption += `│ 💬 *Message:* ${text}\n`;
+    caption += `╰────────────────────────────╯\n\n`;
+    caption += `📍 *Mentioning all members below:*\n\n`;
+    for (const m of participants) {
+      const id = (m.id || m.jid);
+      if (!id) continue;
+      caption += `${randomEmoji} @${id.split('@')[0]}\n`;
+    }
+    caption += `\n━━━━━━⊱ *${botName}* ⊰━━━━━━`;
 
-    const n = res.data.result;
-    const caption = `📰 *${n.title}*\n\n📅 Date: ${n.date}\n⏰ Time: ${n.time}\n\n${n.desc}\n\n🔗 [Read more](${n.url})\n\n_Provided by ${botName}_`;
-
-    await socket.sendMessage(sender, { image: { url: n.image }, caption, contextInfo: { mentionedJid: [sender] } }, { quoted: botMention });
+    await socket.sendMessage(from, {
+      image: { url: groupPP },
+      caption,
+      mentions,
+    }, { quoted: metaQuote }); // <-- botName meta mention
 
   } catch (err) {
-    console.error('lankadeepanews error:', err);
-    await socket.sendMessage(sender, { text: '❌ Error fetching Lankadeepa News.' }, { quoted: botMention });
+    console.error('tagall error', err);
+    await socket.sendMessage(sender, { text: '❌ Error running tagall.' }, { quoted: msg });
+  }
+  break;
+  }
+                    case 'hidetag': {
+    try {
+        // 1. Group Check
+        if (!from || !from.endsWith('@g.us')) return await socket.sendMessage(sender, { text: '❌ This command can only be used in groups.' }, { quoted: msg });
+
+        // 2. Admin Check (Optional: Remove if you want everyone to use it)
+        const groupMetadata = await socket.groupMetadata(from);
+        const participants = groupMetadata.participants || [];
+        const botNumber = socket.user.id.split(':')[0] + '@s.whatsapp.net';
+        const senderId = msg.key.participant || msg.key.remoteJid;
+        
+        const groupAdmins = participants.filter(p => p.admin !== null).map(p => p.id);
+        const isAdmin = groupAdmins.includes(senderId);
+        const isBotAdmin = groupAdmins.includes(botNumber);
+
+        if (!isAdmin) return await socket.sendMessage(sender, { text: '❌ Only Admins can use hidetag.' }, { quoted: msg });
+
+        // 3. Prepare Mentions
+        const mentions = participants.map(p => p.id || p.jid);
+        
+        // 4. Get Text (Message Content)
+        // If user typed text after command, use it. Otherwise use a default text.
+        const text = args.join(' ') || '📢 Hidden Announcement';
+
+        // 5. Load Config for Fake Card
+        const sanitized = (sender || '').replace(/[^0-9]/g, '');
+        const cfg = await loadUserConfigFromMongo(sanitized) || {};
+        const botName = cfg.botName || ' 💚𝐁𝐄𝐒𝐓𝐈𝐄_𝐌𝐈𝐍𝐈😘';
+
+        // Fake Meta Quote Card
+        const metaQuote = {
+            key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_HIDETAG" },
+            message: { contactMessage: { displayName: botName, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${botName}\nFN:${botName}\nEND:VCARD` } }
+        };
+
+        // 6. Handling Message Type (Text vs Image)
+        // Check if the command is sent with an image (Caption)
+        const isImage = msg.message?.imageMessage;
+        
+        if (isImage) {
+            // If replying to image or sending image with caption
+            // Note: Re-sending quoted image needs download logic. 
+            // For simplicity, this handles if you ATTACH image with command.
+            
+            // But if you just want to send TEXT hidetag:
+            await socket.sendMessage(from, { 
+                text: text, 
+                mentions: mentions 
+            }, { quoted: metaQuote });
+
+        } else {
+            // Normal Text Hidetag
+            await socket.sendMessage(from, { 
+                text: text, 
+                mentions: mentions // <--- This does the magic (Hidden Tag)
+            }, { quoted: metaQuote });
+        }
+
+    } catch (err) {
+        console.error('hidetag error', err);
+        await socket.sendMessage(sender, { text: '❌ Error running hidetag.' }, { quoted: msg });
+    }
+    break;
+            }
+                    case 'autotyping': {
+  await socket.sendMessage(sender, { react: { text: '⌨️', key: msg.key } });
+  try {
+    const sanitized = (number || '').replace(/[^0-9]/g, '');
+    const senderNum = (nowsender || '').split('@')[0];
+    const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+    
+    if (senderNum !== sanitized && senderNum !== ownerNum) {
+      const shonux = {
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TYPING1" },
+        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+      };
+      return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change auto typing.' }, { quoted: shonux });
+    }
+    
+    let q = args[0];
+    const settings = { on: "true", off: "false" };
+    
+    if (settings[q]) {
+      const userConfig = await loadUserConfigFromMongo(sanitized) || {};
+      userConfig.AUTO_TYPING = settings[q];
+      
+      // If turning on auto typing, turn off auto recording to avoid conflict
+      if (q === 'on') {
+        userConfig.AUTO_RECORDING = "false";
+      }
+      
+      await setUserConfigInMongo(sanitized, userConfig);
+      
+      const shonux = {
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TYPING2" },
+        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+      };
+      await socket.sendMessage(sender, { text: `✅ *Auto Typing ${q === 'on' ? 'ENABLED' : 'DISABLED'}*` }, { quoted: shonux });
+    } else {
+      const shonux = {
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TYPING3" },
+        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+      };
+      await socket.sendMessage(sender, { text: "❌ *Options:* on / off" }, { quoted: shonux });
+    }
+  } catch (e) {
+    console.error('Autotyping error:', e);
+    const shonux = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TYPING4" },
+      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+    };
+    await socket.sendMessage(sender, { text: "*❌ Error updating auto typing!*" }, { quoted: shonux });
   }
   break;
                     }
