@@ -1765,7 +1765,7 @@ END:VCARD` } }
   break;
                     }
 case 'alive': {
-    const voiceurl = `https://files.catbox.moe/wpciia.mp3`;
+    const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
     const ownerName = socket.user.name || 'Janith sathsara';
     
