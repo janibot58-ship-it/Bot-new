@@ -1576,7 +1576,49 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
         console.error(e);
         await socket.sendMessage(sender, { text: '❌ *Error uploading media.*' });
     }
-                 }  
+    case 'setbotname': {
+    try {
+        // අත්‍යවශ්‍ය variables define කිරීම
+        const sender = m.key.remoteJid;
+        const args = text.split(' ').slice(1);
+        const inputName = args.join(' ').trim();
+        
+        // අංක පිරිසිදු කිරීම (Sanitizing numbers)
+        const senderNum = m.sender.split('@')[0];
+        const ownerNum = (config?.OWNER_NUMBER || '').replace(/[^0-9]/g, '');
+        
+        // Permission Check: Owner ට පමණක් අවසර දීම
+        if (senderNum !== ownerNum) {
+            const shonux = {
+                key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI" },
+                message: { contactMessage: { displayName: 'SYSTEM AUTH', vcard: `BEGIN:VCARD\nVERSION:3.0\nFN:Bot Admin\nEND:VCARD` } }
+            };
+            return await socket.sendMessage(sender, { text: '❌ Permission denied. Owner only command.' }, { quoted: shonux });
+        }
+
+        // නමක් ඇතුළත් කර ඇත්දැයි බැලීම
+        if (!inputName) {
+            return await socket.sendMessage(sender, { text: '❗ Please provide a name.\nExample: `.setbotname MyBotV1`' });
+        }
+
+        // MongoDB Logic
+        // මෙහිදී ownerNum එක key එක ලෙස භාවිතා කරයි
+        let userCfg = await loadUserConfigFromMongo(ownerNum) || {};
+        userCfg.botName = inputName;
+        
+        await setUserConfigInMongo(ownerNum, userCfg);
+
+        // සාර්ථක පණිවිඩය
+        await socket.sendMessage(sender, { 
+            text: `✅ *Bot Name Updated Successfully!*\n\nNew Name: ${inputName}` 
+        }, { quoted: m });
+
+    } catch (e) {
+        console.error('SETBOTNAME ERROR:', e);
+        await socket.sendMessage(m.key.remoteJid, { text: `❌ Error: ${e.message}` });
+    }
+}
+break;
                case 'setlogo': {
   // 1.Variables නිවැරදිව ඇති දැයි පරීක්ෂා කිරීම
   const targetNumber = (typeof number !== 'undefined' ? number : '');
