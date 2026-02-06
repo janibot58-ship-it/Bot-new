@@ -3054,10 +3054,9 @@ case 'autolike': {
     break;
 }
 case 'autorecording': {
-    // 1. මුලින්ම reaction එක යවනවා
+    // 1. Reaction එක යවනවා
     await socket.sendMessage(sender, { react: { text: '🎥', key: msg.key } });
 
-    // 2. පොදුවේ පාවිච්චි කරන Quoted Message එක variable එකකට ගන්න (Code එක clean වෙන්න)
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_RECORDING" },
         message: { 
@@ -3069,49 +3068,53 @@ case 'autorecording': {
     };
 
     try {
-        // 3. Variables ටික හරියට තියෙනවාද බලන්න (නැතිනම් error එකක් එන එක නවත්වන්න)
-        const targetNumber = (typeof number !== 'undefined' ? number : '').replace(/[^0-9]/g, '');
-        const senderNum = (sender || '').split('@')[0];
+        // 2. Owner check එක (config එකේ තියෙන විදිහට check කරන්න)
+        const senderNum = sender.split('@')[0];
         const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
 
-        // 4. Permission Check
-        // මෙතන logic එක: එවපු කෙනා Owner නෙවෙයි නම් message එකක් දාලා නිකන් ඉන්නවා
         if (senderNum !== ownerNum) {
-            return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the bot owner can change settings.' }, { quoted: shonux });
+            return await socket.sendMessage(sender, { text: '❌ ඔබට මෙය සිදු කිරීමට අවසර නැත.' }, { quoted: shonux });
         }
 
-        let q = args[0]?.toLowerCase(); // args[0] නැති වුණොත් එන error එක නවත්වන්න '?' පාවිච්චි කළා
+        // 3. Input එක check කිරීම
+        if (!args[0]) {
+            return await socket.sendMessage(sender, { text: "❓ කරුණාකර `.autorecording on` හෝ `off` ලෙස සඳහන් කරන්න." }, { quoted: shonux });
+        }
+
+        let q = args[0].toLowerCase();
 
         if (q === 'on' || q === 'off') {
-            // MongoDB එකෙන් data ගන්නවා (targetNumber එකට අදාළව)
-            let userConfig = await loadUserConfigFromMongo(targetNumber) || {};
-            
             const isEnable = (q === 'on');
-            userConfig.AUTO_RECORDING = isEnable ? "true" : "false";
+            
+            // MongoDB එකට data යැවීම (මෙහි targetNumber එක ලෙස bot ගේ අංකය හෝ 'global' යෙදීම සුදුසුයි)
+            let userConfig = await loadUserConfigFromMongo(ownerNum) || {};
 
-            // Recording ON කරනවා නම් Typing status එක OFF කරනවා (Conflict එකක් නොවෙන්න)
+            // Value එක update කිරීම
+            userConfig.AUTO_RECORDING = isEnable ? "true" : "false";
+            
             if (isEnable) {
-                userConfig.AUTO_TYPING = "false";
+                userConfig.AUTO_TYPING = "false"; // Recording on නම් typing off කරනවා
             }
 
-            await setUserConfigInMongo(targetNumber, userConfig);
+            await setUserConfigInMongo(ownerNum, userConfig);
 
-            // 5. Presence Update එක වහාම ක්‍රියාත්මක කරන්න
-            // OFF කළොත් 'available' දානවා, ON කළොත් 'recording' දානවා
+            // 4. Presence එක වහාම වෙනස් කිරීම
             await socket.sendPresenceUpdate(isEnable ? 'recording' : 'available', sender);
 
-            await socket.sendMessage(sender, { text: `✅ *Auto Recording ${isEnable ? 'ENABLED' : 'DISABLED'}*` }, { quoted: shonux });
+            await socket.sendMessage(sender, { 
+                text: `✅ *Auto Recording ${isEnable ? 'ක්‍රියාත්මක කළා' : 'අක්‍රිය කළා'}*` 
+            }, { quoted: shonux });
 
         } else {
-            await socket.sendMessage(sender, { text: "❌ *Invalid! Use:* .autorecording on/off" }, { quoted: shonux });
+            await socket.sendMessage(sender, { text: "❌ වැරදි විධානයක්! `.autorecording on/off` පාවිච්චි කරන්න." }, { quoted: shonux });
         }
 
     } catch (e) {
-        console.error('Autorecording error:', e);
-        await socket.sendMessage(sender, { text: "*❌ Error updating auto recording! Check console for details.*" }, { quoted: shonux });
+        console.log('Autorecording Error:', e);
+        await socket.sendMessage(sender, { text: "⚠️ පද්ධතියේ දෝෂයක් පවතී. පසුව උත්සාහ කරන්න." }, { quoted: shonux });
     }
     break;
-        }
+                                                           }
 case 'autoreact': {
     const subCommand = args[0]?.toLowerCase();
     const currentUserConfig = (await loadUserConfigFromMongoDB(number)) || { ...config };
