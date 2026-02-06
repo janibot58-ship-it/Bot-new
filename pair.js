@@ -1576,7 +1576,109 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
         console.error(e);
         await socket.sendMessage(sender, { text: '❌ *Error uploading media.*' });
     }
-                 }              
+                 }  
+                    case 'setbotname': {
+  const sanitized = (number || '').replace(/[^0-9]/g, '');
+  const senderNum = (nowsender || '').split('@')[0];
+  const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+  if (senderNum !== sanitized && senderNum !== ownerNum) {
+    const shonux = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME1" },
+      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+    };
+    await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change this session bot name.' }, { quoted: shonux });
+    break;
+  }
+
+  const name = args.join(' ').trim();
+  if (!name) {
+    const shonux = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME2" },
+      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+    };
+    return await socket.sendMessage(sender, { text: '❗ Provide bot name. Example: `.setbotname  JANI-MD`' }, { quoted: shonux });
+  }
+
+  try {
+    let cfg = await loadUserConfigFromMongo(sanitized) || {};
+    cfg.botName = name;
+    await setUserConfigInMongo(sanitized, cfg);
+
+    const shonux = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME3" },
+      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+    };
+
+    await socket.sendMessage(sender, { text: `✅ Bot display name set for this session: ${name}` }, { quoted: shonux });
+  } catch (e) {
+    console.error('setbotname error', e);
+    const shonux = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETBOTNAME4" },
+      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+    };
+    await socket.sendMessage(sender, { text: `❌ Failed to set bot name: ${e.message || e}` }, { quoted: shonux });
+  }
+  break;
+                    }
+                    case 'setlogo': {
+  const sanitized = (number || '').replace(/[^0-9]/g, '');
+  const senderNum = (nowsender || '').split('@')[0];
+  const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+  if (senderNum !== sanitized && senderNum !== ownerNum) {
+    const shonux = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETLOGO1" },
+      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+    };
+    await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change this session logo.' }, { quoted: shonux });
+    break;
+  }
+
+  const ctxInfo = (msg.message.extendedTextMessage || {}).contextInfo || {};
+  const quotedMsg = ctxInfo.quotedMessage;
+  const media = await downloadQuotedMedia(quotedMsg).catch(()=>null);
+  let logoSetTo = null;
+
+  try {
+    if (media && media.buffer) {
+      const sessionPath = path.join(os.tmpdir(), `session_${sanitized}`);
+      fs.ensureDirSync(sessionPath);
+      const mimeExt = (media.mime && media.mime.split('/').pop()) || 'jpg';
+      const logoPath = path.join(sessionPath, `logo.${mimeExt}`);
+      fs.writeFileSync(logoPath, media.buffer);
+      let cfg = await loadUserConfigFromMongo(sanitized) || {};
+      cfg.logo = logoPath;
+      await setUserConfigInMongo(sanitized, cfg);
+      logoSetTo = logoPath;
+    } else if (args && args[0] && (args[0].startsWith('http') || args[0].startsWith('https'))) {
+      let cfg = await loadUserConfigFromMongo(sanitized) || {};
+      cfg.logo = args[0];
+      await setUserConfigInMongo(sanitized, cfg);
+      logoSetTo = args[0];
+    } else {
+      const shonux = {
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETLOGO2" },
+        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+      };
+      await socket.sendMessage(sender, { text: '❗ Usage: Reply to an image with `.setlogo` OR provide an image URL: `.setlogo https://example.com/logo.jpg`' }, { quoted: shonux });
+      break;
+    }
+
+    const shonux = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETLOGO3" },
+      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+    };
+
+    await socket.sendMessage(sender, { text: `✅ Logo set for this session: ${logoSetTo}` }, { quoted: shonux });
+  } catch (e) {
+    console.error('setlogo error', e);
+    const shonux = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETLOGO4" },
+      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+    };
+    await socket.sendMessage(sender, { text: `❌ Failed to set logo: ${e.message || e}` }, { quoted: shonux });
+  }
+  break;
+                    }
 
     case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
