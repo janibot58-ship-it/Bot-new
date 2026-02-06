@@ -1577,34 +1577,6 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
         await socket.sendMessage(sender, { text: '❌ *Error uploading media.*' });
     }
                  }  
-                    case 'setbotname': {
-    try {
-        const sanitized = (typeof number !== 'undefined' ? number : '').replace(/[^0-9]/g, '');
-        const senderNum = (nowsender || '').split('@')[0];
-        const ownerNum = (config?.OWNER_NUMBER || '').replace(/[^0-9]/g, '');
-
-        if (senderNum !== sanitized && senderNum !== ownerNum) {
-            // Permission denied message logic...
-            return;
-        }
-
-        const name = args.join(' ').trim();
-        if (!name) return await socket.sendMessage(sender, { text: '❗ නමක් ලබා දෙන්න.' });
-
-        // Database logic fix:
-        let cfg = await loadUserConfigFromMongo(sanitized) || { userId: sanitized };
-        cfg.botName = name;
-        
-        await setUserConfigInMongo(sanitized, cfg);
-
-        await socket.sendMessage(sender, { text: `✅ Bot නම සාර්ථකව වෙනස් කළා: ${name}` });
-
-    } catch (e) {
-        console.error('setbotname error:', e);
-        await socket.sendMessage(sender, { text: `❌ Error: ${e.message}` });
-    }
-    break;
-            }                                                           }
                case 'setlogo': {
   // 1.Variables නිවැරදිව ඇති දැයි පරීක්ෂා කිරීම
   const targetNumber = (typeof number !== 'undefined' ? number : '');
