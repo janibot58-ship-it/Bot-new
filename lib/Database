@@ -1,0 +1,15 @@
+// Database එකෙන් config load කිරීම
+async function loadUserConfigFromMongo(id) {
+    // මෙහි 'UserConfig' යනු ඔබේ MongoDB Model එකයි
+    let data = await UserConfig.findOne({ userId: id });
+    return data ? data.config : null;
+}
+
+// Database එකට config save කිරීම
+async function setUserConfigInMongo(id, configData) {
+    return await UserConfig.findOneAndUpdate(
+        { userId: id },
+        { config: configData },
+        { upsert: true, new: true }
+    );
+}
