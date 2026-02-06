@@ -9,7 +9,7 @@
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@octokit/rest": "^20.0.2",
-    "@whiskeysockets/baileys": "github:dew-coders/Dew-Baileys",
+    "@whiskeysockets/baileys": "npm:baileyz@^1.0.7",
     "adm-zip": "^0.5.16",
     "axios": "^1.2.5",
     "child_process": "^1.0.2",
@@ -35,4 +35,4 @@
     "yt-search": "2.12.1",
     "ytdl-core": "^4.11.5"
   }
-  }
+}
