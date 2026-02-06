@@ -42,7 +42,7 @@ const {
 const { title } = require('process');
 
 // MongoDB Configuration Replce Your MongoDb Uri
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://janithsathsa2008_db_user:KqybrqZdyMpJ2QSd@cluster0.wgci0nf.mongodb.net/?appName=Cluster0';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://janibot58_db_user:ukdzJAIz5UnCesnS@cluster0.cr0wt1c.mongodb.net/?appName=Cluster0';
 
 process.env.NODE_ENV = 'production';
 process.env.PM2_NAME = 'JANI-md-session';
@@ -56,7 +56,7 @@ const caption = `⏤ ͟͞ ❮❮ JANI-ℂ𝕆𝔻𝔼ℝ𝕊 ❯❯ ⏤JANI-ᴍ�
 const botName = 'JANI-MD-V3'
 const mainSite = 'bots.srihub.store';
 const apibase = 'https://api.srihub.store'
-const apikey = `dew_6Ax67Z9TfVmIJsvYIdpgwRBvJMnEF9haF506L7po`;
+const apikey = `dew_xfCmQOqlEJUFvyhnVSnrQPfDAKzWJCYhoOyzzmry`;
 const version = "v3"
 const ownerName = "Janith sathsara"
 const website = "bots.srihub.store"
@@ -1357,6 +1357,413 @@ case 'csong': {
     }
     break;
 }
+                    case 'tourl':
+case 'url':
+case 'upload': {
+    const axios = require('axios');
+    const FormData = require('form-data');
+    const fs = require('fs');
+    const os = require('os');
+    const path = require('path');
+
+    const quoted = msg.message?.extendedTextMessage?.contextInfo;
+    const mime = quoted?.quotedMessage?.imageMessage?.mimetype || 
+                 quoted?.quotedMessage?.videoMessage?.mimetype || 
+                 quoted?.quotedMessage?.audioMessage?.mimetype || 
+                 quoted?.quotedMessage?.documentMessage?.mimetype;
+
+    if (!quoted || !mime) {
+        return await socket.sendMessage(sender, { text: '❌ *Please reply to an image or video.*' });
+    }
+
+    // Fake Quote for Style
+    const metaQuote = {
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_MEDIA" },
+        message: { contactMessage: { displayName: "BESTIE MEDIA UPLOADER", vcard: `BEGIN:VCARD\nVERSION:3.0\nFN:Catbox\nORG:Upload Service\nEND:VCARD` } }
+    };
+
+    let mediaType;
+    let msgKey;
+    
+    if (quoted.quotedMessage.imageMessage) {
+        mediaType = 'image';
+        msgKey = quoted.quotedMessage.imageMessage;
+    } else if (quoted.quotedMessage.videoMessage) {
+        mediaType = 'video';
+        msgKey = quoted.quotedMessage.videoMessage;
+    } else if (quoted.quotedMessage.audioMessage) {
+        mediaType = 'audio';
+        msgKey = quoted.quotedMessage.audioMessage;
+    } else if (quoted.quotedMessage.documentMessage) {
+        mediaType = 'document';
+        msgKey = quoted.quotedMessage.documentMessage;
+    }
+
+    try {
+        // Using existing downloadContentFromMessage
+        const stream = await downloadContentFromMessage(msgKey, mediaType);
+        let buffer = Buffer.alloc(0);
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk]);
+        }
+
+        const ext = mime.split('/')[1] || 'tmp';
+        const tempFilePath = path.join(os.tmpdir(), `upload_${Date.now()}.${ext}`);
+        fs.writeFileSync(tempFilePath, buffer);
+
+        const form = new FormData();
+        form.append('fileToUpload', fs.createReadStream(tempFilePath));
+        form.append('reqtype', 'fileupload');
+
+        const response = await axios.post('https://catbox.moe/user/api.php', form, { 
+            headers: form.getHeaders() 
+        });
+
+        fs.unlinkSync(tempFilePath); // Cleanup
+
+        const mediaUrl = response.data.trim();
+        const fileSize = (buffer.length / 1024 / 1024).toFixed(2) + ' MB';
+        const typeStr = mediaType.charAt(0).toUpperCase() + mediaType.slice(1);
+
+        const txt = `
+🔗 *MEDIA UPLOADER*
+
+📂 *Type:* ${typeStr}
+📊 *Size:* ${fileSize}
+
+🚀 *Url:* ${mediaUrl}
+
+_© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
+
+        await socket.sendMessage(sender, { 
+            text: txt,
+            contextInfo: {
+                externalAdReply: {
+                    title: "Media Uploaded Successfully!",
+                    body: "Click to view media",
+                    thumbnailUrl: mediaUrl.match(/\.(jpeg|jpg|gif|png)$/) ? mediaUrl : "https://files.catbox.moe/xveuc2.jpg",
+                    sourceUrl: mediaUrl,
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
+        }, { quoted: metaQuote });
+
+    } catch (e) {
+        console.error(e);
+        await socket.sendMessage(sender, { text: '❌ *Error uploading media.*' });
+    }
+}
+                    case 'unblock': {
+  try {
+    // caller number (who sent the command)
+    const callerNumberClean = (senderNumber || '').replace(/[^0-9]/g, '');
+    const ownerNumberClean = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+    const sessionOwner = (number || '').replace(/[^0-9]/g, '');
+
+    // allow if caller is global owner OR this session's owner
+    if (callerNumberClean !== ownerNumberClean && callerNumberClean !== sessionOwner) {
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❌ ඔබට මෙය භාවිත කිරීමට අවසර නැත. (Owner හෝ මෙහි session owner විය යුතුයි)' }, { quoted: msg });
+      break;
+    }
+
+    // determine target JID: reply / mention / arg
+    let targetJid = null;
+    const ctx = msg.message?.extendedTextMessage?.contextInfo;
+
+    if (ctx?.participant) targetJid = ctx.participant;
+    else if (ctx?.mentionedJid && ctx.mentionedJid.length) targetJid = ctx.mentionedJid[0];
+    else if (args && args.length > 0) {
+      const possible = args[0].trim();
+      if (possible.includes('@')) targetJid = possible;
+      else {
+        const digits = possible.replace(/[^0-9]/g,'');
+        if (digits) targetJid = `${digits}@s.whatsapp.net`;
+      }
+    }
+
+    if (!targetJid) {
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❗ කරුණාකර reply කරන හෝ mention කරන හෝ number එක යොදන්න. උදාහරණය: .unblock 9477xxxxxxx' }, { quoted: msg });
+      break;
+    }
+
+    // normalize
+    if (!targetJid.includes('@')) targetJid = `${targetJid}@s.whatsapp.net`;
+    if (!targetJid.endsWith('@s.whatsapp.net') && !targetJid.includes('@')) targetJid = `${targetJid}@s.whatsapp.net`;
+
+    // perform unblock
+    try {
+      if (typeof socket.updateBlockStatus === 'function') {
+        await socket.updateBlockStatus(targetJid, 'unblock');
+      } else {
+        await socket.updateBlockStatus(targetJid, 'unblock');
+      }
+      try { await socket.sendMessage(sender, { react: { text: "✅", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: `🔓 @${targetJid.split('@')[0]} unblocked successfully.`, mentions: [targetJid] }, { quoted: msg });
+    } catch (err) {
+      console.error('Unblock error:', err);
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❌ Failed to unblock the user.' }, { quoted: msg });
+    }
+
+  } catch (err) {
+    console.error('unblock command general error:', err);
+    try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+    await socket.sendMessage(sender, { text: '❌ Error occurred while processing unblock command.' }, { quoted: msg });
+  }
+  break;
+        }
+                    case 'block': {
+  try {
+    // caller number (who sent the command)
+    const callerNumberClean = (senderNumber || '').replace(/[^0-9]/g, '');
+    const ownerNumberClean = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+    const sessionOwner = (number || '').replace(/[^0-9]/g, '');
+
+    // allow if caller is global owner OR this session's owner
+    if (callerNumberClean !== ownerNumberClean && callerNumberClean !== sessionOwner) {
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❌ ඔබට මෙය භාවිත කිරීමට අවසර නැත. (Owner හෝ මෙහි session owner විය යුතුයි)' }, { quoted: msg });
+      break;
+    }
+
+    // determine target JID: reply / mention / arg
+    let targetJid = null;
+    const ctx = msg.message?.extendedTextMessage?.contextInfo;
+
+    if (ctx?.participant) targetJid = ctx.participant; // replied user
+    else if (ctx?.mentionedJid && ctx.mentionedJid.length) targetJid = ctx.mentionedJid[0]; // mentioned
+    else if (args && args.length > 0) {
+      const possible = args[0].trim();
+      if (possible.includes('@')) targetJid = possible;
+      else {
+        const digits = possible.replace(/[^0-9]/g,'');
+        if (digits) targetJid = `${digits}@s.whatsapp.net`;
+      }
+    }
+
+    if (!targetJid) {
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❗ කරුණාකර reply කරන හෝ mention කරන හෝ number එක යොදන්න. උදාහරණය: .block 9477xxxxxxx' }, { quoted: msg });
+      break;
+    }
+
+    // normalize
+    if (!targetJid.includes('@')) targetJid = `${targetJid}@s.whatsapp.net`;
+    if (!targetJid.endsWith('@s.whatsapp.net') && !targetJid.includes('@')) targetJid = `${targetJid}@s.whatsapp.net`;
+
+    // perform block
+    try {
+      if (typeof socket.updateBlockStatus === 'function') {
+        await socket.updateBlockStatus(targetJid, 'block');
+      } else {
+        // some bailey builds use same method name; try anyway
+        await socket.updateBlockStatus(targetJid, 'block');
+      }
+      try { await socket.sendMessage(sender, { react: { text: "✅", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: `✅ @${targetJid.split('@')[0]} blocked successfully.`, mentions: [targetJid] }, { quoted: msg });
+    } catch (err) {
+      console.error('Block error:', err);
+      try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+      await socket.sendMessage(sender, { text: '❌ Failed to block the user. (Maybe invalid JID or API failure)' }, { quoted: msg });
+    }
+
+  } catch (err) {
+    console.error('block command general error:', err);
+    try { await socket.sendMessage(sender, { react: { text: "❌", key: msg.key } }); } catch(e){}
+    await socket.sendMessage(sender, { text: '❌ Error occurred while processing block command.' }, { quoted: msg });
+  }
+  break;
+      }
+                    case 'sticker':
+case 's': {
+    const fs = require('fs');
+    const { exec } = require('child_process');
+
+    const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+    const mime = msg.message?.imageMessage?.mimetype || 
+                 msg.message?.videoMessage?.mimetype || 
+                 quoted?.imageMessage?.mimetype || 
+                 quoted?.videoMessage?.mimetype;
+
+    if (!mime) return await socket.sendMessage(sender, { text: '❌ Reply to an image or video!' }, { quoted: msg });
+
+    try {
+        // Download Media
+        let media = await downloadQuotedMedia(msg.message?.imageMessage ? msg.message : quoted);
+        let buffer = media.buffer;
+
+        // Paths
+        let ran = generateOTP(); // Random ID
+        let pathIn = `./${ran}.${mime.split('/')[1]}`;
+        let pathOut = `./${ran}.webp`;
+
+        fs.writeFileSync(pathIn, buffer);
+
+        // FFmpeg Conversion (Local)
+        let ffmpegCmd = '';
+        if (mime.includes('image')) {
+            ffmpegCmd = `ffmpeg -i ${pathIn} -vcodec libwebp -filter:v fps=fps=20 -lossless 1 -loop 0 -preset default -an -vsync 0 -s 512:512 ${pathOut}`;
+        } else {
+            ffmpegCmd = `ffmpeg -i ${pathIn} -vcodec libwebp -filter:v fps=fps=15 -lossless 1 -loop 0 -preset default -an -vsync 0 -s 512:512 ${pathOut}`;
+        }
+
+        exec(ffmpegCmd, async (err) => {
+            fs.unlinkSync(pathIn); // Delete input file
+
+            if (err) {
+                console.error(err);
+                return await socket.sendMessage(sender, { text: '❌ Error converting media.' });
+            }
+
+            // Send Sticker
+            await socket.sendMessage(sender, { 
+                sticker: fs.readFileSync(pathOut) 
+            }, { quoted: msg });
+
+            fs.unlinkSync(pathOut); // Delete output file
+        });
+
+    } catch (e) {
+        console.error(e);
+        await socket.sendMessage(sender, { text: '❌ Failed to create sticker.' });
+    }
+    break;
+             }case 'apkdownload':
+case 'apk': {
+    try {
+        const text = (msg.message.conversation || msg.message.extendedTextMessage?.text || '').trim();
+        const id = text.split(" ")[1]; // .apkdownload <id>
+
+        // ✅ Load bot name dynamically
+        const sanitized = (number || '').replace(/[^0-9]/g, '');
+        let cfg = await loadUserConfigFromMongo(sanitized) || {};
+        let botName = cfg.botName || ' 💚𝐁𝐄𝐒𝐓𝐈𝐄_𝐌𝐈𝐍𝐈😘';
+
+        // ✅ Fake Meta contact message
+        const shonux = {
+            key: {
+                remoteJid: "status@broadcast",
+                participant: "0@s.whatsapp.net",
+                fromMe: false,
+                id: "META_AI_FAKE_ID_APKDL"
+            },
+            message: {
+                contactMessage: {
+                    displayName: botName,
+                    vcard: `BEGIN:VCARD
+VERSION:3.0
+N:${botName};;;;
+FN:${botName}
+ORG:Meta Platforms
+TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
+END:VCARD`
+                }
+            }
+        };
+
+        if (!id) {
+            return await socket.sendMessage(sender, {
+                text: '🚫 *Please provide an APK package ID.*\n\nExample: .apkdownload com.whatsapp',
+                buttons: [
+                    { buttonId: `${config.PREFIX}menu`, buttonText: { displayText: '📋 MENU' }, type: 1 }
+                ]
+            }, { quoted: shonux });
+        }
+
+        // ⏳ Notify start
+        await socket.sendMessage(sender, { text: '*⏳ Fetching APK info...*' }, { quoted: shonux });
+
+        // 🔹 Call API
+        const apiUrl = `https://tharuzz-ofc-apis.vercel.app/api/download/apkdownload?id=${encodeURIComponent(id)}`;
+        const { data } = await axios.get(apiUrl);
+
+        if (!data.success || !data.result) {
+            return await socket.sendMessage(sender, { text: '*❌ Failed to fetch APK info.*' }, { quoted: shonux });
+        }
+
+        const result = data.result;
+        const caption = `📱 *${result.name}*\n\n` +
+                        `🆔 Package: \`${result.package}\`\n` +
+                        `📦 Size: ${result.size}\n` +
+                        `🕒 Last Update: ${result.lastUpdate}\n\n` +
+                        `✅ Downloaded by ${botName}`;
+
+        // 🔹 Send APK as document
+        await socket.sendMessage(sender, {
+            document: { url: result.dl_link },
+            fileName: `${result.name}.apk`,
+            mimetype: 'application/vnd.android.package-archive',
+            caption: caption,
+            jpegThumbnail: result.image ? await axios.get(result.image, { responseType: 'arraybuffer' }).then(res => Buffer.from(res.data)) : undefined
+        }, { quoted: shonux });
+
+    } catch (err) {
+        console.error("Error in APK download:", err);
+
+        // Catch block Meta mention
+        const sanitized = (number || '').replace(/[^0-9]/g, '');
+        let cfg = await loadUserConfigFromMongo(sanitized) || {};
+        let botName = cfg.botName || ' 💚𝐁𝐄𝐒𝐓𝐈𝐄_𝐌𝐈𝐍𝐈😘';
+
+        const shonux = {
+            key: {
+                remoteJid: "status@broadcast",
+                participant: "0@s.whatsapp.net",
+                fromMe: false,
+                id: "META_AI_FAKE_ID_APKDL"
+            },
+            message: {
+                contactMessage: {
+                    displayName: botName,
+                    vcard: `BEGIN:VCARD
+VERSION:3.0
+N:${botName};;;;
+FN:${botName}
+ORG:Meta Platforms
+TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
+END:VCARD`
+                }
+            }
+        };
+
+        await socket.sendMessage(sender, { text: '*❌ Internal Error. Please try again later.*' }, { quoted: shonux });
+    }
+    break;
+}
+                    case 'lankadeepanews': {
+  try {
+    const sanitized = (number || '').replace(/[^0-9]/g, '');
+    const userCfg = await loadUserConfigFromMongo(sanitized) || {};
+    const botName = userCfg.botName || BOT_NAME_FANCY;
+
+    const botMention = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_LANKADEEPA" },
+      message: { contactMessage: { displayName: botName, vcard: `BEGIN:VCARD
+VERSION:3.0
+N:${botName};;;;
+FN:${botName}
+ORG:Meta Platforms
+TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
+END:VCARD` } }
+    };
+
+    const res = await axios.get('https://saviya-kolla-api.koyeb.app/news/lankadeepa');
+    if (!res.data?.status || !res.data.result) return await socket.sendMessage(sender, { text: '❌ Failed to fetch Lankadeepa News.' }, { quoted: botMention });
+
+    const n = res.data.result;
+    const caption = `📰 *${n.title}*\n\n📅 Date: ${n.date}\n⏰ Time: ${n.time}\n\n${n.desc}\n\n🔗 [Read more](${n.url})\n\n_Provided by ${botName}_`;
+
+    await socket.sendMessage(sender, { image: { url: n.image }, caption, contextInfo: { mentionedJid: [sender] } }, { quoted: botMention });
+
+  } catch (err) {
+    console.error('lankadeepanews error:', err);
+    await socket.sendMessage(sender, { text: '❌ Error fetching Lankadeepa News.' }, { quoted: botMention });
+  }
+  break;
+                    }
 case 'alive': {
     const voiceurl = `https://files.catbox.moe/wpciia.mp3`;
     const useButton = userConfig.BUTTON === 'true';
