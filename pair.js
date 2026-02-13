@@ -52,7 +52,7 @@ console.log('🚀 Auto Session Manager initialized with MongoDB Atlas');
 // Configs
 const footer = `*㋛ JANI MD BY Janith sathsara*`
 const logo = `https://files.catbox.moe/5usu9r.jpeg`;
-const caption = `⏤ ͟͞ ❮❮ JANI-ℂ𝕆𝔻𝔼ℝ𝕊 ❯❯ ⏤JANI-ᴍᴅᵀᴹ ヤ`; 
+const caption = `JANI-ᴍᴅᵀᴹ`; 
 const botName = 'JANI-MD-V3'
 const mainSite = 'bots.srihub.store';
 const apibase = 'https://api.srihub.store'
@@ -1157,7 +1157,7 @@ function setupCommandHandlers(socket, number) {
             isForwarded: true,
             forwardedNewsletterMessageInfo: {
                 newsletterJid: '120363421416353845@newsletter',
-                newsletterName: '⏤ ͟͞ ❮❮ JANI-ℂ𝕆𝔻𝔼ℝ𝕊 ❯❯ ⏤JANI-ᴍᴅᵀᴹ ヤ',
+                newsletterName: 'JANI-ᴍᴅᵀᴹ',
                 serverMessageId: 143
             }
         }; 
@@ -1577,180 +1577,7 @@ _© ᴘᴏᴡᴇʀᴅ ʙʏ ${botName}`;
   }
   break;
                     }
-                    case 'tagall': {
-  try {
-    if (!from || !from.endsWith('@g.us')) return await socket.sendMessage(sender, { text: '❌ This command can only be used in groups.' }, { quoted: msg });
-
-    let gm = null;
-    try { gm = await socket.groupMetadata(from); } catch(e) { gm = null; }
-    if (!gm) return await socket.sendMessage(sender, { text: '❌ Failed to fetch group info.' }, { quoted: msg });
-
-    const participants = gm.participants || [];
-    if (!participants.length) return await socket.sendMessage(sender, { text: '❌ No members found in the group.' }, { quoted: msg });
-
-    const text = args && args.length ? args.join(' ') : '📢 Announcement';
-
-    let groupPP = 'https://i.ibb.co/9q2mG0Q/default-group.jpg';
-    try { groupPP = await socket.profilePictureUrl(from, 'image'); } catch(e){}
-
-    const mentions = participants.map(p => p.id || p.jid);
-    const groupName = gm.subject || 'Group';
-    const totalMembers = participants.length;
-
-    const emojis = ['📢','🔊','🌐','🛡️','🚀','🎯','🧿','🪩','🌀','💠','🎊','🎧','📣','🗣️'];
-    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-
-    const sanitized = (number || '').replace(/[^0-9]/g, '');
-    const cfg = await loadUserConfigFromMongo(sanitized) || {};
-    const botName = cfg.botName || BOT_NAME_FANCY;
-
-    // BotName meta mention
-    const metaQuote = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TAGALL" },
-      message: { contactMessage: { displayName: botName, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${botName};;;;\nFN:${botName}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-    };
-
-    let caption = `╭───❰ *📛 Group Announcement* ❱───╮\n`;
-    caption += `│ 📌 *Group:* ${groupName}\n`;
-    caption += `│ 👥 *Members:* ${totalMembers}\n`;
-    caption += `│ 💬 *Message:* ${text}\n`;
-    caption += `╰────────────────────────────╯\n\n`;
-    caption += `📍 *Mentioning all members below:*\n\n`;
-    for (const m of participants) {
-      const id = (m.id || m.jid);
-      if (!id) continue;
-      caption += `${randomEmoji} @${id.split('@')[0]}\n`;
-    }
-    caption += `\n━━━━━━⊱ *${botName}* ⊰━━━━━━`;
-
-    await socket.sendMessage(from, {
-      image: { url: groupPP },
-      caption,
-      mentions,
-    }, { quoted: metaQuote }); // <-- botName meta mention
-
-  } catch (err) {
-    console.error('tagall error', err);
-    await socket.sendMessage(sender, { text: '❌ Error running tagall.' }, { quoted: msg });
-  }
-  break;
-  }
-                    case 'hidetag': {
-    try {
-        // 1. Group Check
-        if (!from || !from.endsWith('@g.us')) return await socket.sendMessage(sender, { text: '❌ This command can only be used in groups.' }, { quoted: msg });
-
-        // 2. Admin Check (Optional: Remove if you want everyone to use it)
-        const groupMetadata = await socket.groupMetadata(from);
-        const participants = groupMetadata.participants || [];
-        const botNumber = socket.user.id.split(':')[0] + '@s.whatsapp.net';
-        const senderId = msg.key.participant || msg.key.remoteJid;
-        
-        const groupAdmins = participants.filter(p => p.admin !== null).map(p => p.id);
-        const isAdmin = groupAdmins.includes(senderId);
-        const isBotAdmin = groupAdmins.includes(botNumber);
-
-        if (!isAdmin) return await socket.sendMessage(sender, { text: '❌ Only Admins can use hidetag.' }, { quoted: msg });
-
-        // 3. Prepare Mentions
-        const mentions = participants.map(p => p.id || p.jid);
-        
-        // 4. Get Text (Message Content)
-        // If user typed text after command, use it. Otherwise use a default text.
-        const text = args.join(' ') || '📢 Hidden Announcement';
-
-        // 5. Load Config for Fake Card
-        const sanitized = (sender || '').replace(/[^0-9]/g, '');
-        const cfg = await loadUserConfigFromMongo(sanitized) || {};
-        const botName = cfg.botName || ' 💚𝐁𝐄𝐒𝐓𝐈𝐄_𝐌𝐈𝐍𝐈😘';
-
-        // Fake Meta Quote Card
-        const metaQuote = {
-            key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_HIDETAG" },
-            message: { contactMessage: { displayName: botName, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${botName}\nFN:${botName}\nEND:VCARD` } }
-        };
-
-        // 6. Handling Message Type (Text vs Image)
-        // Check if the command is sent with an image (Caption)
-        const isImage = msg.message?.imageMessage;
-        
-        if (isImage) {
-            // If replying to image or sending image with caption
-            // Note: Re-sending quoted image needs download logic. 
-            // For simplicity, this handles if you ATTACH image with command.
-            
-            // But if you just want to send TEXT hidetag:
-            await socket.sendMessage(from, { 
-                text: text, 
-                mentions: mentions 
-            }, { quoted: metaQuote });
-
-        } else {
-            // Normal Text Hidetag
-            await socket.sendMessage(from, { 
-                text: text, 
-                mentions: mentions // <--- This does the magic (Hidden Tag)
-            }, { quoted: metaQuote });
-        }
-
-    } catch (err) {
-        console.error('hidetag error', err);
-        await socket.sendMessage(sender, { text: '❌ Error running hidetag.' }, { quoted: msg });
-    }
-    break;
-            }
-                    case 'autotyping': {
-  await socket.sendMessage(sender, { react: { text: '⌨️', key: msg.key } });
-  try {
-    const sanitized = (number || '').replace(/[^0-9]/g, '');
-    const senderNum = (nowsender || '').split('@')[0];
-    const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
-    
-    if (senderNum !== sanitized && senderNum !== ownerNum) {
-      const shonux = {
-        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TYPING1" },
-        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-      };
-      return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change auto typing.' }, { quoted: shonux });
-    }
-    
-    let q = args[0];
-    const settings = { on: "true", off: "false" };
-    
-    if (settings[q]) {
-      const userConfig = await loadUserConfigFromMongo(sanitized) || {};
-      userConfig.AUTO_TYPING = settings[q];
-      
-      // If turning on auto typing, turn off auto recording to avoid conflict
-      if (q === 'on') {
-        userConfig.AUTO_RECORDING = "false";
-      }
-      
-      await setUserConfigInMongo(sanitized, userConfig);
-      
-      const shonux = {
-        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TYPING2" },
-        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-      };
-      await socket.sendMessage(sender, { text: `✅ *Auto Typing ${q === 'on' ? 'ENABLED' : 'DISABLED'}*` }, { quoted: shonux });
-    } else {
-      const shonux = {
-        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TYPING3" },
-        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-      };
-      await socket.sendMessage(sender, { text: "❌ *Options:* on / off" }, { quoted: shonux });
-    }
-  } catch (e) {
-    console.error('Autotyping error:', e);
-    const shonux = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_TYPING4" },
-      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-    };
-    await socket.sendMessage(sender, { text: "*❌ Error updating auto typing!*" }, { quoted: shonux });
-  }
-  break;
-                    }
-case 'alive': {
+  case 'alive': {
     const voiceurl = `https://files.catbox.moe/o3nuq9.mp4`;
     const useButton = userConfig.BUTTON === 'true';
     const ownerName = socket.user.name || 'Janith sathsara';
@@ -1834,80 +1661,79 @@ ${footer}`;
         }, { quoted: m });
     }
     break;
-        }                       
+        }                            
 // Menu Command - shows all commands in a button menu or text format - Last Update 2025-August-14
 case 'list':
 case 'pannel':
 case 'menu': {
-    const useButton = userConfig.BUTTON === 'true';
-    // React to the menu command
-    await socket.sendMessage(m.chat, {
-        react: {
-            text: '📜',
-            key: msg.key
-        }
-    });
+    try {
+        const useButton = userConfig.BUTTON === 'true';
 
-    // Commands list grouped by category
-    const commandsInfo = {
-        download: [
-            { name: 'song', description: 'Download Songs' },
-            { name: 'video', description: 'Download Videos'},
-            { name: 'tiktok', description: 'Download TikTok video' },
-            { name: 'img', description: 'Download Images' },
-            { name: 'fb', description: 'Download Facebook video' },
-            { name: 'ig', description: 'Download Instagram video' },
-            { name: 'ts', description: 'Search TikTok videos' },
-            { name: 'yts', description: 'Search YouTube videos' },
-            { name: 'xvdl', description: 'Download Xvideos' },
-            { name: 'ph', description: 'Download Pornhub videos' },
-        ],
-        main: [
-            { name: 'alive', description: 'Show bot status' },
-            { name: 'menu', description: 'Show all commands' },
-            { name: 'ping', description: 'Get bot speed' },
-            { name: 'freebot', description: 'Setup Free Bot' },
-            { name: 'owner', description: 'Contact Bot Owner' },
-            { name: 'getdp', description: 'Get Profile Picture' },
-            { name: 'logo', description: 'Create Logo' },
-            { name: 'fancy', description: 'View Fancy Text' },
-            { name: 'winfo', description: 'Get User Profile Picture' },
-            { name: 'cid', description: 'Get Channel ID' },
-        ],
-        owner: [
-            { name: 'deleteme', description: 'Delete your session' },
-            { name: 'fc', description: 'Follow newsletter channel' },
-            { name: 'set', description: 'Set Setting Using Env' },
-            { name: 'setting', description: 'Setup YouOwn Setting' },
-            { name: 'jid', description: 'Get JID of a number' },
-        ],
-        group: [
-            { name: 'bomb', description: 'Send Bomb Message' },
-        ],
-         ai: [
-            { name: 'aiimg', description: 'Generate AI Image' },
-        ],
-    };
+        // 1. මෙනු විධානයට React කිරීම
+        await socket.sendMessage(m.chat, {
+            react: { text: '📜', key: m.key }
+        });
 
-    // Build sections for button menu
-    const sections = Object.entries(commandsInfo).map(([category, cmds]) => ({
-        title: category.toUpperCase() + ' CMD',
-        rows: cmds.map(cmd => ({
-            title: cmd.name,
-            description: cmd.description,
-            id: prefix + cmd.name,
-        })),
-    }));
+        // 2. හඬ පණිවිඩය (Voice Note) යැවීම
+        // මෙහි url එකට ඔබේ .mp3 හෝ .ogg link එකක් ලබා දෙන්න
+        await socket.sendMessage(m.chat, { 
+            audio: { url: 'https://files.catbox.moe/g0crh5.mp4' }, 
+            mimetype: 'audio/mp4', 
+            ptt: true 
+        }, { quoted: m });
 
-    const ownerName = socket.user.name || 'Janith sathsara';
-    const startTime = socketCreationTime.get(number) || Date.now();
-    const uptime = Math.floor((Date.now() - startTime) / 1000);
-    const hours = Math.floor(uptime / 3600);
-    const minutes = Math.floor((uptime % 3600) / 60);
-    const seconds = Math.floor(uptime % 60);
+        // Commands list grouped by category
+        const commandsInfo = {
+            download: [
+                { name: 'song', description: 'Download Songs' },
+                { name: 'video', description: 'Download Videos'},
+                { name: 'tiktok', description: 'Download TikTok video' },
+                { name: 'img', description: 'Download Images' },
+                { name: 'fb', description: 'Download Facebook video' },
+                { name: 'ig', description: 'Download Instagram video' },
+                { name: 'ts', description: 'Search TikTok videos' },
+                { name: 'yts', description: 'Search YouTube videos' },
+                { name: 'sticker',description: 'sticker'},
+            ],
+            main: [
+                { name: 'alive', description: 'Show bot status' },
+                { name: 'menu', description: 'Show all commands' },
+                { name: 'ping', description: 'Get bot speed' },
+                { name: 'freebot', description: 'Setup Free Bot' },
+                { name: 'owner', description: 'Contact Bot Owner' },
+                { name: 'getdp', description: 'Get Profile Picture' },
+                { name: 'logo', description: 'Create Logo' },
+                { name: 'fancy', description: 'View Fancy Text' },
+                { name: 'winfo', description: 'Get User Profile Picture' },
+                { name: 'cid', description: 'Get Channel ID' },
+            ],
+            owner: [
+                { name: 'deleteme', description: 'Delete your session' },
+                { name: 'fc', description: 'Follow newsletter channel' },
+                { name: 'set', description: 'Set Setting Using Env' },
+                { name: 'setting', description: 'Setup YouOwn Setting' },
+                { name: 'jid', description: 'Get JID of a number' },
+                { name: 'block',description: 'numbare block' },
+                { name: 'unblock',description: 'numbare unblock' },
+            ],
+            group: [
+                { name: 'bomb', description: 'Send Bomb Message' },
+            ],
+            ai: [
+                { name: 'aiimg', description: 'Generate AI Image' },
+            ],
+        };
 
-    // Menu captions
-    const menuCaption = `🤩 *Hello ${pushname}*
+        // 🕒 Uptime ගණනය කිරීම
+        const startTime = socketCreationTime.get(number) || Date.now();
+        const uptime = Math.floor((Date.now() - startTime) / 1000);
+        const hours = Math.floor(uptime / 3600);
+        const minutes = Math.floor((uptime % 3600) / 60);
+        const seconds = Math.floor(uptime % 60);
+        const ownerName = socket.user.name || 'Janith Sathsara';
+
+        // 📝 මෙනු එකේ ප්‍රධාන ශීර්ෂය
+        const menuCaption = `🤩 *Hello ${pushname}*
 > WELCOME TO ${botName} 🪀
 
 *╭─「 ꜱᴛᴀᴛᴜꜱ ᴅᴇᴛᴀɪʟꜱ 」*
@@ -1930,53 +1756,61 @@ ${footer}`;
 *│*📟 \`Uptime\` : ${hours}h ${minutes}m ${seconds}s
 *╰──────────●●►*`;
 
-    // Button menu
-    if (useButton) {
-        await socket.sendMessage(from, {
-            image: { url: logo },
-            caption: menuCaption,
-            buttons: [
-                {
-                    buttonId: 'action',
-                    buttonText: { displayText: '📂 Menu Options' },
-                    type: 4,
-                    nativeFlowInfo: {
-                        name: 'single_select',
-                        paramsJson: JSON.stringify({
-                            title: 'Commands Menu ❏',
-                            sections: sections,
-                        }),
-                    },
-                },
-            ],
-            headerType: 1,
-            viewOnce: true,
-            contextInfo: contextInfo2
-        }, { quoted: myquoted });
+        // 🔘 Button මෙනු එක
+        if (useButton) {
+            const sections = Object.entries(commandsInfo).map(([category, cmds]) => ({
+                title: category.toUpperCase() + ' CMD',
+                rows: cmds.map(cmd => ({
+                    title: cmd.name,
+                    description: cmd.description,
+                    id: prefix + cmd.name,
+                })),
+            }));
 
-    // Normal image + caption menu
-    } else {
-        // Build plain text list of commands grouped by category
-        let fullMenu = `${menuCaption2}`;
-        for (const [category, cmds] of Object.entries(commandsInfo)) {
-            fullMenu += `\n> ${category.toUpperCase()} COMMANDS\n`;
-            fullMenu += `*╭──────────●●►*\n`;
-            fullMenu += cmds.map(c => `*│*❯❯◦ ${c.name}`).join('\n');
-            fullMenu += `\n*╰───────────●●►*`;
+            await socket.sendMessage(m.chat, {
+                image: { url: logo },
+                caption: menuCaption,
+                buttons: [
+                    {
+                        buttonId: 'action',
+                        buttonText: { displayText: '📂 Menu Options' },
+                        type: 4,
+                        nativeFlowInfo: {
+                            name: 'single_select',
+                            paramsJson: JSON.stringify({
+                                title: 'Commands Menu ❏',
+                                sections: sections,
+                            }),
+                        },
+                    },
+                ],
+                headerType: 1,
+                viewOnce: true,
+                contextInfo: contextInfo2
+            }, { quoted: m });
+
+        // 📄 සාමාන්‍ය (Normal) මෙනු එක
+        } else {
+            let fullMenu = menuCaption + `\n`;
+            for (const [category, cmds] of Object.entries(commandsInfo)) {
+                fullMenu += `\n> ${category.toUpperCase()} COMMANDS\n`;
+                fullMenu += `*╭──────────●●►*\n`;
+                fullMenu += cmds.map(c => `*│*❯❯◦ ${c.name}`).join('\n');
+                fullMenu += `\n*╰───────────●●►*`;
+            }
+
+            await socket.sendMessage(m.chat, { 
+                image: { url: logo }, 
+                caption: fullMenu + `\n\n${footer}`, 
+                contextInfo 
+            }, { quoted: m });
         }
 
-        await socket.sendMessage(m.chat, { 
-            image: { url: logo }, 
-            caption: fullMenu+`\n\n${footer}`, 
-            contextInfo 
-        }, { quoted: myquoted });
+    } catch (e) {
+        console.error("Menu Error:", e);
     }
-
     break;
-}
-
-
-
+                 }
 // Logo Maker Command - Button Selection
 case 'logo': {
     const useButton = userConfig.BUTTON === 'true';
